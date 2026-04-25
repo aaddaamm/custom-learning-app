@@ -2,9 +2,10 @@
   import { Progress } from "@skeletonlabs/skeleton-svelte";
   import { onMount } from "svelte";
   import ActiveLearnerCard from "$lib/components/ActiveLearnerCard.svelte";
-  import LearnerPanel from "$lib/components/LearnerPanel.svelte";
+  import ParentSetup from "$lib/components/ParentSetup.svelte";
   import PracticeCard from "$lib/components/PracticeCard.svelte";
   import PracticeControls from "$lib/components/PracticeControls.svelte";
+  import SplashScreen from "$lib/components/SplashScreen.svelte";
   import SummaryCards from "$lib/components/SummaryCards.svelte";
   import TopBar from "$lib/components/TopBar.svelte";
   import WordGrid from "$lib/components/WordGrid.svelte";
@@ -17,13 +18,12 @@
   import { modules } from "../modules/index.js";
   import { createLearningStorage } from "../storage/learningStorage.js";
 
-  const defaultLearner = { id: "learner-1", name: "Learner 1" };
-
   let storage = null;
   let storageLabel = "Loading";
   let storageError = "";
-  let learners = [defaultLearner];
-  let learnerId = defaultLearner.id;
+  let screen = "splash";
+  let learners = [];
+  let learnerId = "";
   let moduleId = "sightWords";
   let progress = { known: [], starred: [] };
   let practiced = [];
@@ -66,8 +66,7 @@
     try {
       const nextStorage = await createLearningStorage();
       const savedLearners = await nextStorage.getLearners();
-      const nextLearners = savedLearners.length ? savedLearners : [defaultLearner];
-      if (!savedLearners.length) await nextStorage.saveLearner(defaultLearner);
+      const nextLearners = savedLearners;
 
       const savedLearnerId = await nextStorage.getSetting("activeLearnerId");
       const savedModuleId = await nextStorage.getSetting("activeModuleId");
@@ -78,10 +77,11 @@
       learners = nextLearners;
       learnerId = nextLearners.some((learner) => learner.id === savedLearnerId)
         ? savedLearnerId
-        : nextLearners[0].id;
+        : nextLearners[0]?.id || "";
       moduleId = modules.some((module) => module.id === savedModuleId)
         ? savedModuleId
         : "sightWords";
+      screen = nextLearners.length ? "splash" : "parent";
 
       await loadProgress();
     } catch (error) {
@@ -89,6 +89,7 @@
       storageLabel = "Unsaved";
       storageError = "Progress is not saving right now.";
       order = [...items.keys()];
+      screen = "parent";
     }
   });
 
@@ -115,7 +116,7 @@
   }
 
   async function loadProgress() {
-    if (!storage) return;
+    if (!storage || !learnerId) return;
     const savedProgress = await storage.getProgress(learnerId, moduleId);
     progress = savedProgress;
     practiced = [];
@@ -210,6 +211,19 @@
     currentOffset = Math.max(0, visibleIndexes.indexOf(index));
   }
 
+  function openParentSetup() {
+    screen = "parent";
+  }
+
+  function openSplash() {
+    screen = "splash";
+  }
+
+  function startPracticeForLearner(nextLearnerId) {
+    learnerId = nextLearnerId;
+    screen = "practice";
+  }
+
   async function addLearner() {
     const cleaned = cleanLearnerName(newLearnerName);
     if (!cleaned || !storage) return;
@@ -239,68 +253,90 @@
   <title>BrightSteps</title>
 </svelte:head>
 
-<main class="app">
-  <section class="practice card" aria-labelledby="app-title">
-    <TopBar knownCount={known.size} headingId="app-title" />
+{#if screen === "practice"}
+  <main class="app">
+    <section class="practice card" aria-labelledby="app-title">
+      <TopBar knownCount={known.size} headingId="app-title" />
 
-    <LearnerPanel {learners} bind:learnerId bind:newLearnerName on:addLearner={addLearner} />
+      {#if storageError}
+        <p class="storage-alert" role="status">{storageError}</p>
+      {/if}
 
+      <PracticeControls
+        bind:setNumber
+        {totalSets}
+        setSize={activeModule.setSize}
+        itemCount={items.length}
+        bind:mode
+        bind:filter
+        onSetChange={resetCurrentOffset}
+        onFilterChange={resetCurrentOffset}
+      />
+
+      <PracticeCard
+        {currentIndex}
+        itemsLength={items.length}
+        {currentItem}
+        {mode}
+        knownCurrent={known.has(currentKey)}
+        currentStarred={starred.has(currentKey)}
+        {choices}
+        bind:typedAnswer
+        {feedback}
+        onToggleStarred={toggleStarred}
+        onSpeak={() => speak(currentItem)}
+        onListenChoice={(choice) => recordAttempt(currentIndex, choice === currentItem, "listen")}
+        onSubmitTyped={submitTypedAnswer}
+      />
+      <div class="actions">
+        <button class="btn" type="button" on:click={() => move(-1)}>Previous</button>
+        <button class="btn" type="button" on:click={shuffleCurrentSet}>Shuffle</button>
+        <button class="btn primary" type="button" on:click={toggleKnown}
+          >{known.has(currentKey) ? "Mark learning" : "Mark known"}</button
+        >
+        <button class="btn" type="button" on:click={() => move(1)}>Next</button>
+      </div>
+    </section>
+
+    <aside class="sidebar card" aria-label="Learning path progress">
+      <ActiveLearnerCard
+        learnerName={activeLearner?.name || "Learner"}
+        moduleTitle={activeModule.title}
+        {storageLabel}
+      />
+      <SummaryCards
+        practicedCount={practiced.length}
+        starredCount={starred.size}
+        inSetCount={visibleIndexes.length}
+      />
+      <Progress value={progressPercent} min={0} max={100} aria-label="Known words progress">
+        <Progress.Track class="progress-track">
+          <Progress.Range class="progress-range"></Progress.Range>
+        </Progress.Track>
+      </Progress>
+      <WordGrid {setIndexes} {items} {currentIndex} {known} {starred} onSelectIndex={selectIndex} />
+    </aside>
+  </main>
+{:else}
+  <main class="entry-shell">
     {#if storageError}
       <p class="storage-alert" role="status">{storageError}</p>
     {/if}
 
-    <PracticeControls
-      bind:setNumber
-      {totalSets}
-      setSize={activeModule.setSize}
-      itemCount={items.length}
-      bind:mode
-      bind:filter
-      onSetChange={resetCurrentOffset}
-      onFilterChange={resetCurrentOffset}
-    />
-
-    <PracticeCard
-      {currentIndex}
-      itemsLength={items.length}
-      {currentItem}
-      {mode}
-      knownCurrent={known.has(currentKey)}
-      currentStarred={starred.has(currentKey)}
-      {choices}
-      bind:typedAnswer
-      {feedback}
-      onToggleStarred={toggleStarred}
-      onSpeak={() => speak(currentItem)}
-      onListenChoice={(choice) => recordAttempt(currentIndex, choice === currentItem, "listen")}
-      onSubmitTyped={submitTypedAnswer}
-    />
-    <div class="actions">
-      <button class="btn" type="button" on:click={() => move(-1)}>Previous</button>
-      <button class="btn" type="button" on:click={shuffleCurrentSet}>Shuffle</button>
-      <button class="btn primary" type="button" on:click={toggleKnown}
-        >{known.has(currentKey) ? "Mark learning" : "Mark known"}</button
-      >
-      <button class="btn" type="button" on:click={() => move(1)}>Next</button>
-    </div>
-  </section>
-
-  <aside class="sidebar card" aria-label="Learning path progress">
-    <ActiveLearnerCard
-      learnerName={activeLearner?.name || "Learner"}
-      moduleTitle={activeModule.title}
-      {storageLabel}
-    />
-    <SummaryCards
-      practicedCount={practiced.length}
-      starredCount={starred.size}
-      inSetCount={visibleIndexes.length}
-    />
-    <Progress value={progressPercent} min={0} max={100} aria-label="Known words progress">
-      <Progress.Track class="progress-track">
-        <Progress.Range class="progress-range"></Progress.Range>
-      </Progress.Track>
-    </Progress>
-    <WordGrid {setIndexes} {items} {currentIndex} {known} {starred} onSelectIndex={selectIndex} />
-  </aside>
-</main>
+    {#if screen === "parent"}
+      <ParentSetup
+        {learners}
+        bind:newLearnerName
+        onAddLearner={addLearner}
+        onBack={openSplash}
+        onStartLearner={startPracticeForLearner}
+      />
+    {:else}
+      <SplashScreen
+        {learners}
+        onSelectLearner={startPracticeForLearner}
+        onOpenParent={openParentSetup}
+      />
+    {/if}
+  </main>
+{/if}

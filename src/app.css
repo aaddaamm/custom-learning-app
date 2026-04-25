@@ -84,6 +84,16 @@ input:focus-visible {
   outline-offset: 2px;
 }
 
+.entry-shell {
+  width: min(900px, calc(100% - 28px));
+  margin: 0 auto;
+  min-height: 100vh;
+  display: grid;
+  align-content: center;
+  padding: 28px 0;
+  gap: 14px;
+}
+
 .app {
   width: min(1180px, calc(100% - 28px));
   margin: 0 auto;
@@ -206,6 +216,7 @@ button.primary {
 }
 
 @media (max-width: 680px) {
+  .entry-shell,
   .app {
     width: min(100% - 18px, 1180px);
     padding: 10px 0;
