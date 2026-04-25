@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Sight Word Studio</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <main class="app">
+      <section class="practice" aria-labelledby="app-title">
+        <div class="topbar">
+          <div>
+            <p class="kicker">Sight Word Studio</p>
+            <h1 id="app-title">Word practice</h1>
+          </div>
+          <div class="meter" aria-label="Practice progress">
+            <span id="known-count">0</span>
+            <span>known</span>
+          </div>
+        </div>
+
+        <div class="controls" aria-label="Practice settings">
+          <label>
+            Set
+            <select id="set-select"></select>
+          </label>
+          <label>
+            Mode
+            <select id="mode-select">
+              <option value="flash">Flashcards</option>
+              <option value="listen">Listen & find</option>
+              <option value="type">Type it</option>
+            </select>
+          </label>
+          <label>
+            Practice
+            <select id="filter-select">
+              <option value="all">All words</option>
+              <option value="learning">Still learning</option>
+              <option value="known">Known words</option>
+              <option value="starred">Starred words</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="card" id="card">
+          <div class="card-meta">
+            <span id="word-position">1 / 300</span>
+            <button id="star-btn" class="icon-button" type="button" aria-label="Star word" title="Star word">☆</button>
+          </div>
+          <button id="speak-btn" class="speak-button" type="button" title="Hear the word">
+            <span aria-hidden="true">▶</span>
+            <span>Hear word</span>
+          </button>
+          <div id="word-display" class="word" aria-live="polite">the</div>
+          <div id="mode-panel" class="mode-panel"></div>
+        </div>
+
+        <div class="actions">
+          <button id="prev-btn" type="button">Previous</button>
+          <button id="shuffle-btn" type="button">Shuffle</button>
+          <button id="known-btn" class="primary" type="button">Mark known</button>
+          <button id="next-btn" type="button">Next</button>
+        </div>
+      </section>
+
+      <aside class="sidebar" aria-label="Word list and progress">
+        <div class="summary">
+          <div>
+            <span id="session-count">0</span>
+            <small>today</small>
+          </div>
+          <div>
+            <span id="starred-count">0</span>
+            <small>starred</small>
+          </div>
+          <div>
+            <span id="set-count">50</span>
+            <small>in set</small>
+          </div>
+        </div>
+        <div class="progress-track" aria-hidden="true">
+          <span id="progress-bar"></span>
+        </div>
+        <div class="word-grid" id="word-grid"></div>
+      </aside>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>
