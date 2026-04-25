@@ -259,33 +259,130 @@ const words = fryWordRows.flatMap((hundred) => {
   return columns.flat();
 });
 
-function loadProgress(indexStorageKey, legacyStorageKey) {
-  const savedIndexes = JSON.parse(localStorage.getItem(indexStorageKey) || "null");
-  if (Array.isArray(savedIndexes)) {
-    return new Set(savedIndexes.map(String));
+const modules = [
+  {
+    id: "sightWords",
+    title: "Sight Words",
+    label: "Fry 1,000",
+    items: words,
+    setSize: 50,
+    itemLabel: "word",
+    itemLabelPlural: "words"
+  },
+  {
+    id: "mathFacts",
+    title: "Math Facts",
+    label: "Planned",
+    status: "planned"
+  },
+  {
+    id: "spelling",
+    title: "Spelling",
+    label: "Planned",
+    status: "planned"
   }
+];
 
-  const legacyWords = new Set(JSON.parse(localStorage.getItem(legacyStorageKey) || "[]"));
-  return new Set(
-    words
-      .map((word, index) => legacyWords.has(word) ? String(index) : null)
-      .filter(Boolean)
-  );
+const learnerStorageKey = "learningProfiles";
+const activeLearnerStorageKey = "activeLearningProfileId";
+const activeModuleStorageKey = "activeLearningModuleId";
+const defaultLearners = [
+  { id: "learner-1", name: "Learner 1" }
+];
+
+function readJson(key, fallback) {
+  try {
+    const value = JSON.parse(localStorage.getItem(key) || "null");
+    return value ?? fallback;
+  } catch {
+    return fallback;
+  }
 }
 
-const setSize = 50;
+function cleanName(name) {
+  return name.trim().replace(/\s+/g, " ");
+}
+
+function loadLearners() {
+  const saved = readJson(learnerStorageKey, null);
+  if (Array.isArray(saved) && saved.length) {
+    const learners = saved
+      .filter((learner) => learner && learner.id && learner.name)
+      .map((learner) => ({ id: String(learner.id), name: String(learner.name) }));
+    if (learners.length) return learners;
+  }
+  localStorage.setItem(learnerStorageKey, JSON.stringify(defaultLearners));
+  return defaultLearners;
+}
+
+function progressKey(profileId, moduleId) {
+  return `learningProgress:${profileId}:${moduleId}`;
+}
+
+function setToArray(set) {
+  return [...set].sort((a, b) => Number(a) - Number(b));
+}
+
+function loadLegacyIndexes(indexStorageKey, legacyStorageKey) {
+  const savedIndexes = readJson(indexStorageKey, null);
+  if (Array.isArray(savedIndexes)) {
+    return savedIndexes.map(String);
+  }
+
+  const legacyWords = new Set(readJson(legacyStorageKey, []));
+  return words
+    .map((word, index) => legacyWords.has(word) ? String(index) : null)
+    .filter(Boolean);
+}
+
+function loadProgress(profileId, moduleId) {
+  const saved = readJson(progressKey(profileId, moduleId), null);
+  if (saved) {
+    return {
+      known: new Set((saved.known || []).map(String)),
+      starred: new Set((saved.starred || []).map(String))
+    };
+  }
+
+  if (profileId === "learner-1" && moduleId === "sightWords") {
+    return {
+      known: new Set(loadLegacyIndexes("knownWordIndexes", "knownWords")),
+      starred: new Set(loadLegacyIndexes("starredWordIndexes", "starredWords"))
+    };
+  }
+
+  return { known: new Set(), starred: new Set() };
+}
+
 const state = {
+  learners: loadLearners(),
+  learnerId: localStorage.getItem(activeLearnerStorageKey) || "learner-1",
+  moduleId: localStorage.getItem(activeModuleStorageKey) || "sightWords",
   index: 0,
   set: 0,
   mode: "flash",
   filter: "all",
   order: [...words.keys()],
   practiced: new Set(),
-  known: loadProgress("knownWordIndexes", "knownWords"),
-  starred: loadProgress("starredWordIndexes", "starredWords")
+  known: new Set(),
+  starred: new Set()
 };
 
+if (!state.learners.some((learner) => learner.id === state.learnerId)) {
+  state.learnerId = state.learners[0].id;
+}
+
+if (!modules.some((module) => module.id === state.moduleId && module.items)) {
+  state.moduleId = "sightWords";
+}
+
 const els = {
+  learnerSelect: document.querySelector("#learner-select"),
+  learnerForm: document.querySelector("#learner-form"),
+  learnerName: document.querySelector("#learner-name"),
+  moduleTabs: document.querySelector("#module-tabs"),
+  activeLearnerName: document.querySelector("#active-learner-name"),
+  activeModuleName: document.querySelector("#active-module-name"),
   setSelect: document.querySelector("#set-select"),
   modeSelect: document.querySelector("#mode-select"),
   filterSelect: document.querySelector("#filter-select"),
@@ -306,23 +403,89 @@ const els = {
   wordGrid: document.querySelector("#word-grid")
 };
 
+function currentLearner() {
+  return state.learners.find((learner) => learner.id === state.learnerId) || state.learners[0];
+}
+
+function currentModule() {
+  return modules.find((module) => module.id === state.moduleId) || modules[0];
+}
+
+function moduleItems() {
+  return currentModule().items || [];
+}
+
 function saveProgress() {
-  localStorage.setItem("knownWordIndexes", JSON.stringify([...state.known]));
-  localStorage.setItem("starredWordIndexes", JSON.stringify([...state.starred]));
+  localStorage.setItem(progressKey(state.learnerId, state.moduleId), JSON.stringify({
+    known: setToArray(state.known),
+    starred: setToArray(state.starred)
+  }));
+  localStorage.setItem(activeLearnerStorageKey, state.learnerId);
+  localStorage.setItem(activeModuleStorageKey, state.moduleId);
+}
+
+function saveLearners() {
+  localStorage.setItem(learnerStorageKey, JSON.stringify(state.learners));
+  localStorage.setItem(activeLearnerStorageKey, state.learnerId);
+}
+
+function loadCurrentProgress() {
+  const progress = loadProgress(state.learnerId, state.moduleId);
+  state.known = progress.known;
+  state.starred = progress.starred;
+  state.practiced = new Set();
+}
+
+function renderLearners() {
+  els.learnerSelect.replaceChildren();
+  state.learners.forEach((learner) => {
+    const option = document.createElement("option");
+    option.value = learner.id;
+    option.textContent = learner.name;
+    els.learnerSelect.append(option);
+  });
+  els.learnerSelect.value = state.learnerId;
+  els.activeLearnerName.textContent = currentLearner().name;
+}
+
+function renderModules() {
+  els.moduleTabs.replaceChildren();
+  modules.forEach((module) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "module-tab";
+    button.classList.toggle("active", module.id === state.moduleId);
+    button.classList.toggle("planned", module.status === "planned");
+    button.disabled = module.status === "planned";
+    button.innerHTML = `<strong>${module.title}</strong><small>${module.label}</small>`;
+    button.addEventListener("click", () => switchModule(module.id));
+    els.moduleTabs.append(button);
+  });
+  els.activeModuleName.textContent = currentModule().title;
 }
 
 function populateSets() {
-  for (let i = 0; i < words.length / setSize; i += 1) {
+  const module = currentModule();
+  const items = moduleItems();
+  els.setSelect.replaceChildren();
+  for (let i = 0; i < Math.ceil(items.length / module.setSize); i += 1) {
     const option = document.createElement("option");
     option.value = String(i);
-    option.textContent = `Words ${i * setSize + 1}-${(i + 1) * setSize}`;
+    const start = i * module.setSize + 1;
+    const end = Math.min((i + 1) * module.setSize, items.length);
+    option.textContent = `${module.itemLabelPlural[0].toUpperCase()}${module.itemLabelPlural.slice(1)} ${start}-${end}`;
     els.setSelect.append(option);
   }
+  els.setSelect.value = String(state.set);
 }
 
 function setIndexes() {
-  const start = state.set * setSize;
-  const indexes = [...Array(setSize).keys()].map((offset) => start + offset);
+  const module = currentModule();
+  const items = moduleItems();
+  const start = state.set * module.setSize;
+  const indexes = [...Array(module.setSize).keys()]
+    .map((offset) => start + offset)
+    .filter((index) => index < items.length);
   return indexes.filter((index) => {
     const key = String(index);
     if (state.filter === "known") return state.known.has(key);
@@ -346,7 +509,7 @@ function currentIndex() {
 
 function currentWord() {
   const index = currentIndex();
-  return index === null ? "" : words[index];
+  return index === null ? "" : moduleItems()[index];
 }
 
 function speak(word = currentWord()) {
@@ -363,7 +526,7 @@ function chooseDistractors(answerIndex) {
   const indexes = setIndexes().filter((index) => index !== answerIndex);
   const shuffled = indexes.sort(() => Math.random() - 0.5).slice(0, 3);
   const choices = [answerIndex, ...shuffled].sort(() => Math.random() - 0.5);
-  return choices.map((index) => words[index]);
+  return choices.map((index) => moduleItems()[index]);
 }
 
 function renderMode() {
@@ -381,7 +544,7 @@ function renderMode() {
   if (state.mode === "flash") {
     const feedback = document.createElement("div");
     feedback.className = "feedback";
-    feedback.textContent = state.known.has(word) ? "Known word" : "Practice this word";
+    feedback.textContent = state.known.has(String(currentIndex())) ? `Known ${currentModule().itemLabel}` : `Practice this ${currentModule().itemLabel}`;
     els.modePanel.append(feedback);
     return;
   }
@@ -433,7 +596,7 @@ function renderMode() {
 function renderGrid() {
   els.wordGrid.replaceChildren();
   setIndexes().forEach((index) => {
-    const word = words[index];
+    const word = moduleItems()[index];
     const key = String(index);
     const chip = document.createElement("button");
     chip.type = "button";
@@ -457,11 +620,12 @@ function render() {
   const index = currentIndex();
   const key = index === null ? "" : String(index);
   const position = index === null ? 0 : index + 1;
+  const total = moduleItems().length;
   if (index !== null) state.practiced.add(key);
 
   els.wordDisplay.textContent = word || "No words";
   els.wordPosition.textContent = visible.length
-    ? `${position} / ${words.length}`
+    ? `${position} / ${total}`
     : "No words here yet";
   els.starBtn.textContent = state.starred.has(key) ? "★" : "☆";
   els.knownBtn.textContent = state.known.has(key) ? "Mark learning" : "Mark known";
@@ -469,8 +633,10 @@ function render() {
   els.sessionCount.textContent = state.practiced.size;
   els.starredCount.textContent = state.starred.size;
   els.setCount.textContent = visible.length;
-  els.progressBar.style.width = `${Math.round((state.known.size / words.length) * 100)}%`;
+  els.progressBar.style.width = `${Math.round((state.known.size / total) * 100)}%`;
 
+  renderLearners();
+  renderModules();
   renderMode();
   renderGrid();
 }
@@ -517,6 +683,49 @@ function shuffleCurrentSet() {
   render();
 }
 
+function switchLearner(learnerId) {
+  if (!state.learners.some((learner) => learner.id === learnerId)) return;
+  state.learnerId = learnerId;
+  state.index = 0;
+  state.set = 0;
+  loadCurrentProgress();
+  populateSets();
+  saveLearners();
+  render();
+}
+
+function switchModule(moduleId) {
+  const module = modules.find((item) => item.id === moduleId);
+  if (!module || !module.items) return;
+  state.moduleId = moduleId;
+  state.index = 0;
+  state.set = 0;
+  state.order = [...module.items.keys()];
+  loadCurrentProgress();
+  populateSets();
+  saveProgress();
+  render();
+}
+
+function addLearner(name) {
+  const cleaned = cleanName(name);
+  if (!cleaned) return;
+  const idBase = cleaned.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "") || "learner";
+  let id = idBase;
+  let counter = 2;
+  while (state.learners.some((learner) => learner.id === id)) {
+    id = `${idBase}-${counter}`;
+    counter += 1;
+  }
+  state.learners.push({ id, name: cleaned });
+  state.learnerId = id;
+  saveLearners();
+  loadCurrentProgress();
+  populateSets();
+  render();
+}
+
+loadCurrentProgress();
 populateSets();
 
 els.setSelect.addEventListener("change", () => {
@@ -536,6 +745,12 @@ els.filterSelect.addEventListener("change", () => {
   render();
 });
 
+els.learnerSelect.addEventListener("change", () => switchLearner(els.learnerSelect.value));
+els.learnerForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  addLearner(els.learnerName.value);
+  els.learnerName.value = "";
+});
 els.prevBtn.addEventListener("click", () => move(-1));
 els.nextBtn.addEventListener("click", () => move(1));
 els.shuffleBtn.addEventListener("click", shuffleCurrentSet);
@@ -555,6 +770,7 @@ els.starBtn.addEventListener("click", () => {
 });
 
 document.addEventListener("keydown", (event) => {
+  if (["INPUT", "SELECT", "BUTTON", "TEXTAREA"].includes(event.target.tagName)) return;
   if (event.key === "ArrowRight") move(1);
   if (event.key === "ArrowLeft") move(-1);
   if (event.key === " ") {

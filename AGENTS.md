@@ -20,12 +20,16 @@ Primary files:
 - Prefer plain JavaScript, HTML, and CSS that are easy for a parent or teacher to inspect.
 - Preserve browser-local progress behavior unless intentionally changing storage.
 - Keep UI copy kid-friendly, short, and calm.
+- Keep learner progress scoped by learner and module.
+- Keep modules registered in `app.js` so new learning areas can share the same navigation and profile system.
 
 ## Data Notes
 
 The Fry sight-word list lives in `app.js` as readable source rows and is flattened at runtime.
 
 Progress is tracked by word index rather than word text because the Fry 1,000 source includes repeated words.
+
+Learners are stored in `localStorage` under `learningProfiles`. Progress is stored under keys shaped like `learningProgress:<learnerId>:<moduleId>`.
 
 ## Verification
 
@@ -44,3 +48,6 @@ When changing interactions, manually open `index.html` and test:
 - listen-and-find mode
 - type-it mode
 - known/starred filters
+- adding and switching learners
+- confirming progress differs between learners
+- module tabs remain stable on desktop and mobile

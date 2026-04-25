@@ -34,7 +34,8 @@ input {
 }
 
 button,
-select {
+select,
+input {
   min-height: 44px;
 }
 
@@ -116,10 +117,81 @@ h1 {
   text-transform: uppercase;
 }
 
+.learner-panel,
 .controls {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
+}
+
+.learner-panel {
+  margin-bottom: 16px;
+}
+
+.learner-form {
+  grid-column: span 2;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+  align-self: end;
+}
+
+.learner-form button {
+  border: 0;
+  border-radius: 8px;
+  background: var(--sky);
+  color: #fff;
+  padding: 0 18px;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.module-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.module-tab {
+  min-height: 70px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  color: var(--ink);
+  cursor: pointer;
+  display: grid;
+  gap: 4px;
+  align-content: center;
+  text-align: left;
+  padding: 12px;
+}
+
+.module-tab strong,
+.learner-card strong {
+  font-size: 1rem;
+  font-weight: 900;
+}
+
+.module-tab small,
+.learner-card small,
+.learner-card span {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.module-tab.active {
+  border-color: var(--green);
+  background: rgba(47, 125, 85, 0.12);
+}
+
+.module-tab.planned {
+  cursor: default;
+  opacity: 0.72;
+}
+
+.controls {
   margin-bottom: 16px;
 }
 
@@ -281,6 +353,16 @@ input {
   padding: 18px;
 }
 
+.learner-card {
+  display: grid;
+  gap: 4px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  padding: 14px;
+  margin-bottom: 14px;
+}
+
 .summary {
   justify-content: space-between;
   gap: 10px;
@@ -397,8 +479,15 @@ input {
   }
 
   .controls,
+  .learner-panel,
+  .module-tabs,
   .choices,
   .type-row {
+    grid-template-columns: 1fr;
+  }
+
+  .learner-form {
+    grid-column: auto;
     grid-template-columns: 1fr;
   }
 

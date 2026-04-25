@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Sight Word Studio</title>
+    <title>Custom Learning App</title>
     <link rel="stylesheet" href="styles.css">
   </head>
   <body>
@@ -11,14 +11,27 @@
       <section class="practice" aria-labelledby="app-title">
         <div class="topbar">
           <div>
-            <p class="kicker">Sight Word Studio</p>
-            <h1 id="app-title">Word practice</h1>
+            <p class="kicker">Custom Learning</p>
+            <h1 id="app-title">Learning path</h1>
           </div>
           <div class="meter" aria-label="Practice progress">
             <span id="known-count">0</span>
             <span>known</span>
           </div>
         </div>
+
+        <div class="learner-panel" aria-label="Learner profiles">
+          <label>
+            Learner
+            <select id="learner-select"></select>
+          </label>
+          <form id="learner-form" class="learner-form">
+            <input id="learner-name" autocomplete="off" placeholder="Add learner" aria-label="Learner name">
+            <button type="submit">Add</button>
+          </form>
+        </div>
+
+        <div class="module-tabs" id="module-tabs" aria-label="Learning modules"></div>
 
         <div class="controls" aria-label="Practice settings">
           <label>
@@ -65,7 +78,12 @@
         </div>
       </section>
 
-      <aside class="sidebar" aria-label="Word list and progress">
+      <aside class="sidebar" aria-label="Learning path progress">
+        <div class="learner-card">
+          <small>Active learner</small>
+          <strong id="active-learner-name">Learner</strong>
+          <span id="active-module-name">Sight Words</span>
+        </div>
         <div class="summary">
           <div>
             <span id="session-count">0</span>
