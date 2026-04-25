@@ -29,7 +29,7 @@
       placeholder="Add learner"
       aria-label="Learner name"
     />
-    <button class="btn" type="submit">Add</button>
+    <button class="btn primary" type="submit">Add</button>
   </form>
 </div>
 

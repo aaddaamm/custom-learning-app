@@ -8,6 +8,12 @@
   import SummaryCards from "$lib/components/SummaryCards.svelte";
   import TopBar from "$lib/components/TopBar.svelte";
   import WordGrid from "$lib/components/WordGrid.svelte";
+  import {
+    chooseDistractors,
+    cleanLearnerName,
+    getSetIndexes,
+    makeLearnerId
+  } from "$lib/utils/practice.js";
   import { modules } from "../modules/index.js";
   import { createLearningStorage } from "../storage/learningStorage.js";
 
@@ -120,25 +126,6 @@
     await storage.saveSetting("activeModuleId", moduleId);
   }
 
-  function cleanName(name) {
-    return name.trim().replace(/\s+/g, " ");
-  }
-
-  function makeLearnerId(name) {
-    const base =
-      name
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, "-")
-        .replace(/(^-|-$)/g, "") || "learner";
-    let id = base;
-    let counter = 2;
-    while (learners.some((learner) => learner.id === id)) {
-      id = `${base}-${counter}`;
-      counter += 1;
-    }
-    return id;
-  }
-
   function speak(text) {
     if (!text || !("speechSynthesis" in window)) return;
     window.speechSynthesis.cancel();
@@ -146,19 +133,6 @@
     utterance.rate = 0.72;
     utterance.pitch = 1.08;
     window.speechSynthesis.speak(utterance);
-  }
-
-  function getSetIndexes(nextSetNumber, setSize, itemCount, nextFilter, nextKnown, nextStarred) {
-    const start = nextSetNumber * setSize;
-    return Array.from({ length: setSize }, (_, offset) => start + offset)
-      .filter((index) => index < itemCount)
-      .filter((index) => {
-        const key = String(index);
-        if (nextFilter === "known") return nextKnown.has(key);
-        if (nextFilter === "learning") return !nextKnown.has(key);
-        if (nextFilter === "starred") return nextStarred.has(key);
-        return true;
-      });
   }
 
   async function saveProgress(nextKnown, nextStarred) {
@@ -215,6 +189,10 @@
     await saveProgress(known, nextStarred);
   }
 
+  function resetCurrentOffset() {
+    currentOffset = 0;
+  }
+
   function move(delta) {
     if (!visibleIndexes.length) return;
     currentOffset = (currentOffset + delta + visibleIndexes.length) % visibleIndexes.length;
@@ -225,23 +203,29 @@
     const visibleSet = new Set(visibleIndexes);
     const rest = order.filter((index) => !visibleSet.has(index));
     order = [...shuffledVisible, ...rest];
-    currentOffset = 0;
+    resetCurrentOffset();
+  }
+
+  function selectIndex(index) {
+    currentOffset = Math.max(0, visibleIndexes.indexOf(index));
   }
 
   async function addLearner() {
-    const cleaned = cleanName(newLearnerName);
+    const cleaned = cleanLearnerName(newLearnerName);
     if (!cleaned || !storage) return;
-    const learner = { id: makeLearnerId(cleaned), name: cleaned };
+
+    const learner = {
+      id: makeLearnerId(
+        cleaned,
+        learners.map((learner) => learner.id)
+      ),
+      name: cleaned
+    };
+
     await storage.saveLearner(learner);
     learners = [...learners, learner];
     learnerId = learner.id;
     newLearnerName = "";
-  }
-
-  function chooseDistractors(index, indexesInSet, moduleItems) {
-    const indexes = indexesInSet.filter((nextIndex) => nextIndex !== index);
-    const nextChoices = [index, ...indexes.sort(() => Math.random() - 0.5).slice(0, 3)];
-    return nextChoices.sort(() => Math.random() - 0.5).map((nextIndex) => moduleItems[nextIndex]);
   }
 
   async function submitTypedAnswer() {
@@ -272,8 +256,8 @@
       itemCount={items.length}
       bind:mode
       bind:filter
-      onSetChange={() => (currentOffset = 0)}
-      onFilterChange={() => (currentOffset = 0)}
+      onSetChange={resetCurrentOffset}
+      onFilterChange={resetCurrentOffset}
     />
 
     <PracticeCard
@@ -317,13 +301,6 @@
         <Progress.Range class="progress-range"></Progress.Range>
       </Progress.Track>
     </Progress>
-    <WordGrid
-      {setIndexes}
-      {items}
-      {currentIndex}
-      {known}
-      {starred}
-      onSelectIndex={(index) => (currentOffset = Math.max(0, visibleIndexes.indexOf(index)))}
-    />
+    <WordGrid {setIndexes} {items} {currentIndex} {known} {starred} onSelectIndex={selectIndex} />
   </aside>
 </main>
