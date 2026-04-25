@@ -14,8 +14,9 @@
   --banana: #ffd166;
   --melon: #ff8fa3;
   --bubblegum: #ff70b8;
-  --sky: #56cfe1;
-  --ocean: #4d96ff;
+  --sky: #007c91;
+  --sky-soft: #fff1cc;
+  --ocean: #245bd6;
   --mint: #7bd88f;
   --grape: #8e7dff;
   --cream: #fff7df;
@@ -43,9 +44,9 @@ body {
   min-height: 100vh;
   background:
     radial-gradient(circle at 15% 12%, rgba(255, 209, 102, 0.55), transparent 30%),
-    radial-gradient(circle at 86% 8%, rgba(86, 207, 225, 0.4), transparent 26%),
+    radial-gradient(circle at 86% 8%, rgba(255, 209, 102, 0.2), transparent 26%),
     radial-gradient(circle at 80% 78%, rgba(255, 143, 163, 0.28), transparent 30%),
-    linear-gradient(135deg, #fff7df 0%, #eefaff 100%);
+    linear-gradient(135deg, #fff7df 0%, #fffdf6 100%);
 }
 
 button,
@@ -215,6 +216,16 @@ button.primary,
   border-color: transparent;
 }
 
+.storage-alert {
+  margin: 0 0 16px;
+  padding: 12px 14px;
+  border: 2px solid rgba(216, 132, 0, 0.35);
+  border-radius: 18px;
+  background: #fff7cf;
+  color: #694100;
+  font-weight: 900;
+}
+
 .controls {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   margin-bottom: 18px;
@@ -230,7 +241,7 @@ button.primary,
   border: 3px solid rgba(255, 255, 255, 0.9);
   background:
     radial-gradient(circle at top left, rgba(255, 209, 102, 0.42), transparent 34%),
-    radial-gradient(circle at bottom right, rgba(86, 207, 225, 0.35), transparent 34%), #fff;
+    radial-gradient(circle at bottom right, rgba(255, 143, 163, 0.16), transparent 34%), #fff;
 }
 
 .card-meta {
@@ -292,8 +303,9 @@ button.primary,
 
 .choice {
   min-height: 64px;
-  background: #f0fbff;
-  border-color: rgba(86, 207, 225, 0.45);
+  background: var(--sky-soft);
+  border-color: rgba(36, 48, 71, 0.22);
+  color: var(--ink);
 }
 
 .type-row {
@@ -392,7 +404,7 @@ button.primary,
 .chip.active {
   border-color: var(--ocean);
   color: var(--ink);
-  background: #eef8ff;
+  background: var(--sky-soft);
 }
 
 .chip.known {

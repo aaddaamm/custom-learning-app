@@ -8,6 +8,7 @@
 
   let storage = null;
   let storageLabel = "Loading";
+  let storageError = "";
   let learners = [defaultLearner];
   let learnerId = defaultLearner.id;
   let moduleId = "sightWords";
@@ -17,7 +18,7 @@
   let mode = "flash";
   let filter = "all";
   let currentOffset = 0;
-  let order = [];
+  let order = [...(modules.find((module) => module.id === moduleId)?.items || []).keys()];
   let newLearnerName = "";
   let typedAnswer = "";
   let feedback = "";
@@ -49,23 +50,33 @@
       : [];
 
   onMount(async () => {
-    const nextStorage = await createLearningStorage();
-    const savedLearners = await nextStorage.getLearners();
-    const nextLearners = savedLearners.length ? savedLearners : [defaultLearner];
-    if (!savedLearners.length) await nextStorage.saveLearner(defaultLearner);
+    try {
+      const nextStorage = await createLearningStorage();
+      const savedLearners = await nextStorage.getLearners();
+      const nextLearners = savedLearners.length ? savedLearners : [defaultLearner];
+      if (!savedLearners.length) await nextStorage.saveLearner(defaultLearner);
 
-    const savedLearnerId = await nextStorage.getSetting("activeLearnerId");
-    const savedModuleId = await nextStorage.getSetting("activeModuleId");
+      const savedLearnerId = await nextStorage.getSetting("activeLearnerId");
+      const savedModuleId = await nextStorage.getSetting("activeModuleId");
 
-    storage = nextStorage;
-    storageLabel = nextStorage.label;
-    learners = nextLearners;
-    learnerId = nextLearners.some((learner) => learner.id === savedLearnerId)
-      ? savedLearnerId
-      : nextLearners[0].id;
-    moduleId = modules.some((module) => module.id === savedModuleId) ? savedModuleId : "sightWords";
+      storage = nextStorage;
+      storageLabel = nextStorage.label;
+      storageError = "";
+      learners = nextLearners;
+      learnerId = nextLearners.some((learner) => learner.id === savedLearnerId)
+        ? savedLearnerId
+        : nextLearners[0].id;
+      moduleId = modules.some((module) => module.id === savedModuleId)
+        ? savedModuleId
+        : "sightWords";
 
-    await loadProgress();
+      await loadProgress();
+    } catch (error) {
+      console.error("Learning storage failed to start.", error);
+      storageLabel = "Unsaved";
+      storageError = "Progress is not saving right now.";
+      order = [...items.keys()];
+    }
   });
 
   $: if (storage && learnerId && moduleId) {
@@ -269,6 +280,10 @@
         <button class="btn" type="submit">Add</button>
       </form>
     </div>
+
+    {#if storageError}
+      <p class="storage-alert" role="status">{storageError}</p>
+    {/if}
 
     <div class="controls">
       <label>

@@ -22,7 +22,11 @@ function normalizeProgress(progress) {
 
 export async function createLearningStorage() {
   if (window.__TAURI_INTERNALS__) {
-    return createSqliteStorage();
+    try {
+      return await createSqliteStorage();
+    } catch (error) {
+      console.error("SQLite storage failed; using browser fallback.", error);
+    }
   }
   return createBrowserStorage();
 }
@@ -125,31 +129,57 @@ async function createSqliteStorage() {
 }
 
 function createBrowserStorage() {
+  const memory = {
+    learners: [],
+    progress: new Map(),
+    settings: new Map()
+  };
+
   return {
     label: "Browser fallback",
     async getLearners() {
-      return readJson("learningProfiles", []);
+      const savedLearners = readJson("learningProfiles", null);
+      return savedLearners || memory.learners;
     },
     async saveLearner(learner) {
-      const learners = readJson("learningProfiles", []);
+      const learners = readJson("learningProfiles", memory.learners);
       const next = learners.filter((item) => item.id !== learner.id);
       next.push(learner);
-      localStorage.setItem("learningProfiles", JSON.stringify(next));
+      memory.learners = next;
+      try {
+        localStorage.setItem("learningProfiles", JSON.stringify(next));
+      } catch (error) {
+        console.error("Browser storage failed to save learner.", error);
+      }
     },
     async getSetting(key) {
-      return localStorage.getItem(key);
+      try {
+        return localStorage.getItem(key) || memory.settings.get(key) || null;
+      } catch {
+        return memory.settings.get(key) || null;
+      }
     },
     async saveSetting(key, value) {
-      localStorage.setItem(key, value);
+      memory.settings.set(key, value);
+      try {
+        localStorage.setItem(key, value);
+      } catch (error) {
+        console.error("Browser storage failed to save setting.", error);
+      }
     },
     async getProgress(learnerId, moduleId) {
-      return normalizeProgress(readJson(progressKey(learnerId, moduleId), null));
+      const key = progressKey(learnerId, moduleId);
+      return normalizeProgress(readJson(key, memory.progress.get(key)));
     },
     async saveProgress(learnerId, moduleId, progress) {
-      localStorage.setItem(
-        progressKey(learnerId, moduleId),
-        JSON.stringify(normalizeProgress(progress))
-      );
+      const key = progressKey(learnerId, moduleId);
+      const next = normalizeProgress(progress);
+      memory.progress.set(key, next);
+      try {
+        localStorage.setItem(key, JSON.stringify(next));
+      } catch (error) {
+        console.error("Browser storage failed to save progress.", error);
+      }
     },
     async saveAttempt() {}
   };
