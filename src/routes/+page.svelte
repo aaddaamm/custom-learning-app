@@ -1,6 +1,13 @@
 <script>
   import { Progress } from "@skeletonlabs/skeleton-svelte";
   import { onMount } from "svelte";
+  import ActiveLearnerCard from "$lib/components/ActiveLearnerCard.svelte";
+  import LearnerPanel from "$lib/components/LearnerPanel.svelte";
+  import PracticeCard from "$lib/components/PracticeCard.svelte";
+  import PracticeControls from "$lib/components/PracticeControls.svelte";
+  import SummaryCards from "$lib/components/SummaryCards.svelte";
+  import TopBar from "$lib/components/TopBar.svelte";
+  import WordGrid from "$lib/components/WordGrid.svelte";
   import { modules } from "../modules/index.js";
   import { createLearningStorage } from "../storage/learningStorage.js";
 
@@ -245,134 +252,45 @@
 </script>
 
 <svelte:head>
-  <title>Custom Learning App</title>
+  <title>BrightSteps</title>
 </svelte:head>
 
 <main class="app">
   <section class="practice card" aria-labelledby="app-title">
-    <div class="topbar">
-      <div>
-        <p class="kicker badge">Custom Learning</p>
-        <h1 id="app-title">Learning path</h1>
-      </div>
-      <div class="meter">
-        <span>{known.size}</span>
-        <span>known</span>
-      </div>
-    </div>
+    <TopBar knownCount={known.size} headingId="app-title" />
 
-    <div class="learner-panel">
-      <label>
-        Learner
-        <select class="select" bind:value={learnerId}>
-          {#each learners as learner (learner.id)}
-            <option value={learner.id}>{learner.name}</option>
-          {/each}
-        </select>
-      </label>
-      <form class="learner-form" on:submit|preventDefault={addLearner}>
-        <input
-          class="input"
-          bind:value={newLearnerName}
-          placeholder="Add learner"
-          aria-label="Learner name"
-        />
-        <button class="btn" type="submit">Add</button>
-      </form>
-    </div>
+    <LearnerPanel {learners} bind:learnerId bind:newLearnerName on:addLearner={addLearner} />
 
     {#if storageError}
       <p class="storage-alert" role="status">{storageError}</p>
     {/if}
 
-    <div class="controls">
-      <label>
-        Set
-        <select class="select" bind:value={setNumber} on:change={() => (currentOffset = 0)}>
-          {#each Array.from({ length: totalSets }, (_, index) => index) as index (index)}
-            <option value={index}
-              >Words {index * activeModule.setSize + 1}-{Math.min(
-                (index + 1) * activeModule.setSize,
-                items.length
-              )}</option
-            >
-          {/each}
-        </select>
-      </label>
-      <label>
-        Mode
-        <select class="select" bind:value={mode}>
-          <option value="flash">Flashcards</option>
-          <option value="listen">Listen & find</option>
-          <option value="type">Type it</option>
-        </select>
-      </label>
-      <label>
-        Practice
-        <select class="select" bind:value={filter} on:change={() => (currentOffset = 0)}>
-          <option value="all">All words</option>
-          <option value="learning">Still learning</option>
-          <option value="known">Known words</option>
-          <option value="starred">Starred words</option>
-        </select>
-      </label>
-    </div>
+    <PracticeControls
+      bind:setNumber
+      {totalSets}
+      setSize={activeModule.setSize}
+      itemCount={items.length}
+      bind:mode
+      bind:filter
+      onSetChange={() => (currentOffset = 0)}
+      onFilterChange={() => (currentOffset = 0)}
+    />
 
-    <div class="card practice-card">
-      <div class="card-meta">
-        <span
-          >{currentIndex === null
-            ? "No words here yet"
-            : `${currentIndex + 1} / ${items.length}`}</span
-        >
-        <button
-          class="btn-icon icon-button"
-          type="button"
-          aria-label="Star word"
-          title="Star word"
-          on:click={toggleStarred}>{starred.has(currentKey) ? "★" : "☆"}</button
-        >
-      </div>
-      <button
-        class="btn speak-button"
-        type="button"
-        title="Hear the word"
-        on:click={() => speak(currentItem)}
-      >
-        <span aria-hidden="true">▶</span>
-        <span>Hear word</span>
-      </button>
-      <div class="word" aria-live="polite">{currentItem || "No words"}</div>
-      <div class="mode-panel">
-        {#if mode === "flash"}
-          <div class="feedback">{known.has(currentKey) ? "Known word" : "Practice this word"}</div>
-        {:else if mode === "listen"}
-          <div class="choices">
-            {#each choices as choice (choice)}
-              <button
-                class="btn choice"
-                type="button"
-                on:click={() => recordAttempt(currentIndex, choice === currentItem, "listen")}
-                >{choice}</button
-              >
-            {/each}
-          </div>
-        {:else if mode === "type"}
-          <form class="type-row" on:submit|preventDefault={submitTypedAnswer}>
-            <input
-              class="input"
-              bind:value={typedAnswer}
-              autocomplete="off"
-              autocapitalize="none"
-              aria-label="Type the word"
-            />
-            <button class="btn" type="submit">Check</button>
-          </form>
-          <div class="feedback">{feedback}</div>
-        {/if}
-      </div>
-    </div>
-
+    <PracticeCard
+      {currentIndex}
+      itemsLength={items.length}
+      {currentItem}
+      {mode}
+      knownCurrent={known.has(currentKey)}
+      currentStarred={starred.has(currentKey)}
+      {choices}
+      bind:typedAnswer
+      {feedback}
+      onToggleStarred={toggleStarred}
+      onSpeak={() => speak(currentItem)}
+      onListenChoice={(choice) => recordAttempt(currentIndex, choice === currentItem, "listen")}
+      onSubmitTyped={submitTypedAnswer}
+    />
     <div class="actions">
       <button class="btn" type="button" on:click={() => move(-1)}>Previous</button>
       <button class="btn" type="button" on:click={shuffleCurrentSet}>Shuffle</button>
@@ -384,32 +302,28 @@
   </section>
 
   <aside class="sidebar card" aria-label="Learning path progress">
-    <div class="learner-card">
-      <small>Active learner</small>
-      <strong>{activeLearner?.name || "Learner"}</strong>
-      <span>{activeModule.title} · {storageLabel}</span>
-    </div>
-    <div class="summary">
-      <div class="card"><span>{practiced.length}</span><small>today</small></div>
-      <div class="card"><span>{starred.size}</span><small>starred</small></div>
-      <div class="card"><span>{visibleIndexes.length}</span><small>in set</small></div>
-    </div>
+    <ActiveLearnerCard
+      learnerName={activeLearner?.name || "Learner"}
+      moduleTitle={activeModule.title}
+      {storageLabel}
+    />
+    <SummaryCards
+      practicedCount={practiced.length}
+      starredCount={starred.size}
+      inSetCount={visibleIndexes.length}
+    />
     <Progress value={progressPercent} min={0} max={100} aria-label="Known words progress">
       <Progress.Track class="progress-track">
         <Progress.Range class="progress-range"></Progress.Range>
       </Progress.Track>
     </Progress>
-    <div class="word-grid">
-      {#each setIndexes as index (index)}
-        {@const key = String(index)}
-        <button
-          type="button"
-          class={`btn chip ${index === currentIndex ? "active" : ""} ${known.has(key) ? "known" : ""} ${starred.has(key) ? "starred" : ""}`}
-          on:click={() => (currentOffset = Math.max(0, visibleIndexes.indexOf(index)))}
-        >
-          {items[index]}
-        </button>
-      {/each}
-    </div>
+    <WordGrid
+      {setIndexes}
+      {items}
+      {currentIndex}
+      {known}
+      {starred}
+      onSelectIndex={(index) => (currentOffset = Math.max(0, visibleIndexes.indexOf(index)))}
+    />
   </aside>
 </main>

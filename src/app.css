@@ -114,82 +114,9 @@ input:focus-visible {
   top: 20px;
 }
 
-.topbar,
-.learner-panel,
-.controls,
-.actions,
-.summary {
+.actions {
   display: grid;
   gap: 12px;
-}
-
-.topbar {
-  grid-template-columns: 1fr auto;
-  align-items: center;
-  margin-bottom: 20px;
-}
-
-.kicker {
-  margin: 0 0 4px;
-  color: var(--ink-strong);
-  font-size: 0.86rem;
-  font-weight: 950;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-}
-
-.kicker.badge {
-  border: 1px solid var(--badge-border);
-  background: var(--badge-bg);
-}
-
-h1 {
-  margin: 0;
-  color: var(--ink-strong);
-  font-size: clamp(2.1rem, 5vw, 4.8rem);
-  line-height: 0.95;
-  letter-spacing: -0.05em;
-}
-
-.meter {
-  width: 104px;
-  height: 104px;
-  display: grid;
-  place-items: center;
-  border-radius: 999px;
-  background:
-    linear-gradient(var(--surface), var(--surface)) padding-box,
-    conic-gradient(var(--mint), var(--sky), var(--grape), var(--pink-deep), var(--mint)) border-box;
-  border: 8px solid transparent;
-  color: var(--ink-strong);
-}
-
-.meter span {
-  display: block;
-  text-align: center;
-  font-weight: 950;
-}
-
-.meter span:first-child {
-  color: var(--ink-strong);
-  font-size: 1.8rem;
-  line-height: 1;
-}
-
-.meter span:last-child {
-  color: var(--muted);
-  font-size: 0.78rem;
-}
-
-.learner-panel {
-  grid-template-columns: 220px 1fr;
-  margin-bottom: 16px;
-}
-
-.learner-form {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 10px;
 }
 
 label {
@@ -247,11 +174,6 @@ button.primary,
   background: var(--surface-soft);
   color: var(--warning-text);
   font-weight: 900;
-}
-
-.controls {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  margin-bottom: 18px;
 }
 
 .practice-card {
@@ -343,56 +265,6 @@ button.primary,
   margin-top: 16px;
 }
 
-.learner-card {
-  display: grid;
-  gap: 5px;
-  padding: 18px;
-  border-radius: 24px;
-  background: linear-gradient(135deg, var(--learner-glow-primary), var(--learner-glow-secondary));
-}
-
-.learner-card strong {
-  color: var(--ink-strong);
-  font-size: 1.2rem;
-  font-weight: 1000;
-}
-
-.learner-card small,
-.learner-card span {
-  color: var(--muted);
-  font-size: 0.8rem;
-  font-weight: 900;
-}
-
-.summary {
-  grid-template-columns: repeat(3, 1fr);
-  margin: 16px 0;
-}
-
-.summary div {
-  min-height: 82px;
-  display: grid;
-  place-items: center;
-  border-radius: 22px;
-  background: var(--surface);
-  border: 2px solid var(--line);
-}
-
-.summary span,
-.summary small {
-  display: block;
-  font-weight: 950;
-}
-
-.summary span {
-  color: var(--ink-strong);
-  font-size: 1.45rem;
-}
-
-.summary small {
-  color: var(--muted);
-}
-
 .progress-track {
   height: 18px;
   overflow: hidden;
@@ -467,25 +339,9 @@ button.primary,
     padding: 18px;
   }
 
-  .topbar {
-    grid-template-columns: 1fr;
-  }
-
-  .meter {
-    width: 84px;
-    height: 84px;
-    border-width: 6px;
-  }
-
-  .learner-panel,
-  .controls,
   .choices,
   .type-row,
   .actions {
-    grid-template-columns: 1fr;
-  }
-
-  .learner-form {
     grid-template-columns: 1fr;
   }
 

@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "Custom Learning App",
+  "productName": "BrightSteps",
   "version": "0.1.0",
-  "identifier": "com.aaddaamm.custom-learning-app",
+  "identifier": "com.aaddaamm.brightsteps",
   "build": {
     "beforeDevCommand": "npm run dev",
     "devUrl": "http://localhost:1420",
@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "Custom Learning App",
+        "title": "BrightSteps",
         "width": 1180,
         "height": 820,
         "minWidth": 760,
@@ -26,6 +26,13 @@
   "bundle": {
     "active": true,
     "targets": "all",
-    "icon": ["icons/icon.png"]
+    "icon": [
+      "icons/icon.png",
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ]
   }
 }

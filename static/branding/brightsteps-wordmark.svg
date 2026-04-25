@@ -1,0 +1,52 @@
+<svg width="1120" height="320" viewBox="0 0 1120 320" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">BrightSteps fantasy wordmark</title>
+  <desc id="desc">Enchanted lantern icon with BrightSteps wordmark and decorative star accents.</desc>
+
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="280" y2="280" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F7F5FF"/>
+      <stop offset="1" stop-color="#E8F1FF"/>
+    </linearGradient>
+    <linearGradient id="titleFill" x1="350" y1="70" x2="900" y2="220" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#223A82"/>
+      <stop offset="1" stop-color="#345CB9"/>
+    </linearGradient>
+  </defs>
+
+  <!-- icon tile -->
+  <g transform="translate(36,20)">
+    <rect x="0" y="0" width="280" height="280" rx="64" fill="url(#bg)"/>
+
+    <ellipse cx="140" cy="192" rx="80" ry="18" fill="#DCEAFE"/>
+    <rect x="66" y="190" width="48" height="22" rx="8" transform="rotate(-8 66 190)" fill="#BFD9FF" stroke="#5F8ED8" stroke-width="2.5"/>
+    <rect x="118" y="178" width="56" height="24" rx="8" transform="rotate(-3 118 178)" fill="#96C4FF" stroke="#4E83D4" stroke-width="2.5"/>
+    <rect x="180" y="162" width="62" height="26" rx="8" transform="rotate(5 180 162)" fill="#6EAFFF" stroke="#4479CB" stroke-width="2.5"/>
+
+    <path d="M106 90C106 75.6 117.6 64 132 64C146.4 64 158 75.6 158 90" stroke="#1B327B" stroke-width="5.5" stroke-linecap="round"/>
+    <path d="M116 89H148L142 79H122L116 89Z" fill="#27458F" stroke="#1A3175" stroke-width="2.8" stroke-linejoin="round"/>
+    <rect x="114" y="89" width="36" height="11" rx="3" fill="#244186" stroke="#1A3175" stroke-width="2.8"/>
+
+    <path d="M102 101H162L154 184H110L102 101Z" fill="#223F89" stroke="#162A65" stroke-width="4" stroke-linejoin="round"/>
+    <rect x="108" y="183" width="48" height="8" rx="3" fill="#13265E"/>
+    <rect x="114" y="191" width="8" height="6" rx="2" fill="#13265E"/>
+    <rect x="142" y="191" width="8" height="6" rx="2" fill="#13265E"/>
+
+    <path d="M113 112H151L145 173H119L113 112Z" fill="#EAF2FF" stroke="#9FB9E8" stroke-width="2.5"/>
+    <path d="M132 116V170" stroke="#89A8DD" stroke-width="3" stroke-linecap="round"/>
+    <path d="M116 142H148" stroke="#89A8DD" stroke-width="3" stroke-linecap="round"/>
+
+    <circle cx="132" cy="142" r="10" fill="#FFE19A"/>
+    <circle cx="132" cy="142" r="4.5" fill="#E88D1D"/>
+
+    <path d="M218 92L223 103L234 108L223 113L218 124L213 113L202 108L213 103L218 92Z" fill="#FFD86A"/>
+  </g>
+
+  <!-- wordmark -->
+  <text x="350" y="146" fill="url(#titleFill)" font-family="Atkinson Hyperlegible, Lexend, Verdana, Trebuchet MS, system-ui, sans-serif" font-size="96" font-weight="800" letter-spacing="0.8">BrightSteps</text>
+  <path d="M352 164C450 190 626 190 742 164" stroke="#8FAFE6" stroke-width="6" stroke-linecap="round"/>
+  <text x="354" y="214" fill="#324A7D" font-family="Atkinson Hyperlegible, Lexend, Verdana, Trebuchet MS, system-ui, sans-serif" font-size="34" font-weight="600">Small steps, big learning.</text>
+
+  <!-- decorative stars near title -->
+  <path d="M924 78L929 89L940 94L929 99L924 110L919 99L908 94L919 89L924 78Z" fill="#FFD86A"/>
+  <path d="M968 118L971 125L978 128L971 131L968 138L965 131L958 128L965 125L968 118Z" fill="#FFE7A6"/>
+</svg>
