@@ -82,7 +82,10 @@ async function createSqliteStorage() {
       return rows[0]?.value || null;
     },
     async saveSetting(key, value) {
-      await db.execute("INSERT OR REPLACE INTO settings (key, value) VALUES ($1, $2)", [key, value]);
+      await db.execute("INSERT OR REPLACE INTO settings (key, value) VALUES ($1, $2)", [
+        key,
+        value
+      ]);
     },
     async getProgress(learnerId, moduleId) {
       const rows = await db.select(
@@ -143,7 +146,10 @@ function createBrowserStorage() {
       return normalizeProgress(readJson(progressKey(learnerId, moduleId), null));
     },
     async saveProgress(learnerId, moduleId, progress) {
-      localStorage.setItem(progressKey(learnerId, moduleId), JSON.stringify(normalizeProgress(progress)));
+      localStorage.setItem(
+        progressKey(learnerId, moduleId),
+        JSON.stringify(normalizeProgress(progress))
+      );
     },
     async saveAttempt() {}
   };

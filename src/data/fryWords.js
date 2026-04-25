@@ -1,5 +1,5 @@
 export const fryWordRows = [
-`the or will number
+  `the or will number
 of one up no
 and had other way
 a by about could
@@ -24,7 +24,7 @@ be do more come
 this how write made
 have their go may
 from if see part`,
-`over say set try
+  `over say set try
 new great put kind
 sound where end hand
 take help does picture
@@ -49,7 +49,7 @@ good around different learn
 sentence form home should
 man three us America
 think small move world`,
-`high saw important miss
+  `high saw important miss
 every left until idea
 near don't children enough
 add few side eat
@@ -74,7 +74,7 @@ thought got stop being
 head group without leave
 under often second family
 story run late it's`,
-`body order listen farm
+  `body order listen farm
 music red wind pulled
 color door rock draw
 stand sure space voice
@@ -99,7 +99,7 @@ didn't remember north travel
 friends early slowly wood
 easy waves money fire
 heard reached map upon`,
-`done decided plane filled
+  `done decided plane filled
 English contain system heat
 road course behind full
 half surface ran hot
@@ -124,7 +124,7 @@ feel machine clear pair
 fact base equation circle
 inches ago yet include
 street stood government built`,
-`can't picked legs beside
+  `can't picked legs beside
 matter simple sat gone
 square cells main sky
 syllables paint winter grass
@@ -149,7 +149,7 @@ return summer finished teacher
 believe wall discovered held
 dance forest wild describe
 members probably happy drive`,
-`cross already hair rolled
+  `cross already hair rolled
 speak instead age bear
 solve phrase amount wonder
 appear soil scale smiled
@@ -174,7 +174,7 @@ century lake count dress
 outside iron consonant cat
 everything within someone couldn't
 tall dictionary sail fingers`,
-`row president yourself caught
+  `row president yourself caught
 least brown control fell
 catch trouble practice team
 climbed cool report God
@@ -199,7 +199,7 @@ skin mouth received students
 valley yard garden human
 cents equal please art
 key decimal strange feeling`,
-`supply guess thick major
+  `supply guess thick major
 corner silent blood observe
 electric trade lie tube
 insects rather spot necessary
@@ -224,7 +224,7 @@ addition movement planets spread
 belong pole rhythm cattle
 safe exciting eight wife
 soldiers branches science sharp`,
-`company sister gun total
+  `company sister gun total
 radio oxygen similar deal
 we'll plural death determine
 action various score evening
@@ -253,9 +253,14 @@ church huge steel view`
 
 export const fryWords = fryWordRows.flatMap((hundred) => {
   const columns = [[], [], [], []];
-  hundred.trim().split("\n").forEach((row) => {
-    row.trim().split(/\s+/).forEach((word, index) => columns[index].push(word));
-  });
+  hundred
+    .trim()
+    .split("\n")
+    .forEach((row) => {
+      row
+        .trim()
+        .split(/\s+/)
+        .forEach((word, index) => columns[index].push(word));
+    });
   return columns.flat();
 });
-

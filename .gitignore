@@ -1,7 +1,10 @@
 node_modules/
 dist/
+build/
+.svelte-kit/
 src-tauri/gen/
 src-tauri/target/
+.pi-lens/
 
 .DS_Store
 *.log
