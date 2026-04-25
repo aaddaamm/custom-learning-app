@@ -23,27 +23,31 @@ Avoid:
 
 ## Color palette
 
-| Token     | Hex       | Use                                    |
-| --------- | --------- | -------------------------------------- |
-| Banana    | `#FFD166` | Warm highlights, gentle celebration    |
-| Melon     | `#FF8FA3` | Friendly accents, encouragement        |
-| Bubblegum | `#FF70B8` | Special actions, playful accents       |
-| Sky       | `#56CFE1` | Secondary actions, calm focus          |
-| Ocean     | `#4D96FF` | Primary actions, links, selected state |
-| Mint      | `#7BD88F` | Known/completed/success states         |
-| Grape     | `#8E7DFF` | Progress gradients, magical accents    |
-| Cream     | `#FFF7DF` | App background                         |
-| Paper     | `#FFFFFF` | Cards and panels                       |
-| Ink       | `#243047` | Main text                              |
-| Slate     | `#66708A` | Muted text                             |
+Current app tokens (from `src/app.css` / `src/styles/learning-theme.css`):
+
+| Token      | Hex       | Use                                           |
+| ---------- | --------- | --------------------------------------------- |
+| Sky        | `#3B82F6` | Bright blue accents, progress/meter gradients |
+| Ocean      | `#2F5EFF` | Primary actions, links, selected states       |
+| Melon      | `#A78BFA` | Secondary gradient accent                     |
+| Grape      | `#7C3AED` | Deeper purple accents                         |
+| Pink Deep  | `#BE185D` | Dark pink accent in key gradients             |
+| Mint       | `#22A06B` | Known/completed/success states                |
+| Sky Soft   | `#E8EFFF` | Soft cool background chips                    |
+| Cream      | `#F3F6FB` | App background base                           |
+| Surface    | `#FFFFFF` | Cards and panels                              |
+| Ink        | `#1F2633` | Main text                                     |
+| Ink Strong | `#111827` | Headings, active/important text               |
+| Muted      | `#4B5567` | Secondary labels and supporting text          |
 
 ## Semantic usage
 
 - Primary action: Ocean → Grape gradient.
-- Positive progress: Mint, optionally with Sky.
-- Starred/special: Banana.
-- Try-again states: use neutral Slate text with warm guidance; do not use alarm red.
-- Parent/admin surfaces can use quieter Paper, Cream, and Slate with small color accents.
+- Positive progress: Mint (with Sky for bars/rings).
+- Accent energy: Melon/Grape/Pink Deep in gradients.
+- Try-again states: use neutral muted text with warm guidance; do not use alarm red.
+- Parent/admin surfaces should stay mostly Surface/Cream with small accent highlights.
+- Do not place white text on light backgrounds. Use Ink or Ink Strong for chip/card text.
 
 ## Shape and spacing
 
@@ -72,8 +76,9 @@ Avoid fonts that make sight words harder to recognize. Be careful with novelty f
 
 Current Skeleton commitments:
 
-- `@skeletonlabs/skeleton` CSS and the `seafoam` theme are imported in `src/app.css`.
-- `data-theme="seafoam"` is set in `src/app.html`.
+- `@skeletonlabs/skeleton` CSS is imported in `src/app.css`.
+- Custom Skeleton theme is defined in `src/styles/learning-theme.css`.
+- `data-theme="learning"` is set in `src/app.html`.
 - Skeleton design tokens are aligned with the readable font stack and rounded radii.
 - Skeleton utility classes are used for buttons, inputs, selects, cards, badges, and chips.
 - Skeleton Svelte `Progress` is used for learner progress.
@@ -111,6 +116,7 @@ Prefer Skeleton primitives for standard UI. Keep custom CSS for the distinctive 
 - Do not communicate status by color alone.
 - Keep visible focus rings.
 - Preserve readable text contrast on gradients.
+- Do not place white text on light blue. Use Ink or the darker Sky/Ocean tokens for text and borders.
 - Respect reduced-motion preferences before adding animations.
 - Keep speech/listening features optional and button-triggered where possible.
 - Keep tap targets at least 44px.
