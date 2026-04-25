@@ -2,11 +2,12 @@
 
 A local-first learning app for multiple kids and multiple learning modules.
 
-The first active module is **Sight Words**, using the Fry 1,000 word list. Each learner has their own known words, starred words, and practice history. The app is built with React and Vite, packaged with Tauri, and stores durable desktop data in SQLite.
+The first active module is **Sight Words**, using the Fry 1,000 word list. Each learner has their own known words, starred words, and practice history. The app is built with SvelteKit, Skeleton/Tailwind, and Tauri, and stores durable desktop data in SQLite.
 
 ## Current Stack
 
-- React for the UI
+- SvelteKit for the UI and routing
+- Skeleton/Tailwind for design-system utilities, theme tokens, and Svelte components
 - Vite for local web development and frontend builds
 - Tauri for the desktop app shell
 - SQLite through `@tauri-apps/plugin-sql`
@@ -44,6 +45,12 @@ Build the frontend:
 npm run build
 ```
 
+SvelteKit static output is written to:
+
+```text
+build/
+```
+
 Build the desktop app:
 
 ```bash
@@ -75,16 +82,18 @@ src-tauri/target/debug/bundle/
 - Browser speech synthesis
 - SQLite storage in the Tauri desktop app
 - Browser fallback storage for quick web preview
-- Planned module slots for Math Facts and Spelling
+- Kid-friendly colorful palette and style tokens layered on Skeleton in `src/app.css`
 
 ## Project Layout
 
-- `index.html` - Vite entry document
-- `src/main.jsx` - React app shell and current practice UI
-- `src/styles.css` - application styling
+- `src/app.html` - SvelteKit HTML shell
+- `src/routes/+layout.svelte` - global CSS import
+- `src/routes/+page.svelte` - app shell and current practice UI
+- `src/app.css` - Skeleton/Tailwind imports, color tokens, and application styling
 - `src/data/fryWords.js` - Fry 1,000 source rows and flattened word list
 - `src/modules/index.js` - module registry
 - `src/storage/learningStorage.js` - storage adapter for SQLite and browser fallback
+- `svelte.config.js` - SvelteKit static adapter config
 - `src-tauri/` - Tauri desktop app, Rust entry points, permissions, and bundling config
 
 ## Storage Model
@@ -114,19 +123,32 @@ The active module shape is:
   title: "Sight Words",
   label: "Fry 1,000",
   items: fryWords,
-  setSize: 50,
-  itemLabel: "word",
-  itemLabelPlural: "words"
+  setSize: 50
 }
 ```
 
-Future modules should fit the same navigation model: learner-scoped progress, module-scoped attempts, and small practice sets.
+Future modules should fit the same navigation model: learner-scoped progress, module-scoped attempts, and small practice sets. Planned module work is tracked in GitHub issues rather than placeholder UI tabs.
+
+## Roadmap
+
+See `ROADMAP.md`. GitHub issues track the concrete checkpoints.
+
+Planning docs:
+
+- `docs/module-implementation-plan.md`
+- `docs/parent-oversight-and-insights-plan.md`
+- `docs/student-incentives-plan.md`
+- `docs/kid-friendly-styleguide.md`
+- `docs/accessibility-and-quality-plan.md`
 
 ## Verification
 
 Before committing UI or storage changes, run:
 
 ```bash
+npm run format
+npm run check
+npm run lint
 npm run build
 ```
 
@@ -142,5 +164,7 @@ Build outputs and dependency folders are ignored:
 
 - `node_modules/`
 - `dist/`
+- `build/`
+- `.svelte-kit/`
 - `src-tauri/target/`
 - `src-tauri/gen/`

@@ -1,109 +1,43 @@
 # AGENTS.md
 
-Guidance for coding agents working in this repository.
+Guidance for coding agents in this repo.
 
-## Project Shape
+## App shape
 
-This is a local-first React/Vite app packaged as a Tauri desktop app. The desktop app uses SQLite through `@tauri-apps/plugin-sql`.
+- Local-first SvelteKit app styled with Skeleton/Tailwind and packaged with Tauri.
+- Desktop persistence uses SQLite via `@tauri-apps/plugin-sql`.
+- Web preview must keep using the storage adapter's `localStorage` fallback.
+- Current active module: `sightWords` in `src/modules/index.js`.
 
-The app is intended to support:
+## Core boundaries
 
-- multiple learners
-- multiple learning modules
-- per-learner module progress
-- local-first persistence
-
-## Important Files
-
-- `index.html` - Vite entry document
-- `src/main.jsx` - React app shell and practice UI
-- `src/styles.css` - visual design
-- `src/data/fryWords.js` - Fry 1,000 data source
-- `src/modules/index.js` - module registry
-- `src/storage/learningStorage.js` - storage boundary
-- `src-tauri/tauri.conf.json` - Tauri app config
-- `src-tauri/capabilities/default.json` - Tauri permissions, including SQL access
-- `src-tauri/src/lib.rs` - Tauri plugin registration
-
-## Working Rules
-
-- Keep UI components behind the storage adapter. Do not call SQLite or `localStorage` directly from React components.
-- Keep learner progress scoped by `learnerId`, `moduleId`, and item index.
-- Keep modules registered in `src/modules/index.js`.
-- Keep the app runnable with `npm run dev` for web preview.
-- Keep the desktop app runnable with `npm run tauri -- dev`.
-- Preserve the browser fallback storage unless intentionally replacing the development workflow.
+- Svelte routes/components must use `src/storage/learningStorage.js`; do not call SQLite or `localStorage` directly from UI code.
+- Browser-only storage and speech APIs belong behind `onMount`, event handlers, or browser guards.
+- Learner progress is scoped by `learnerId`, `moduleId`, and item index. Do not key progress by item text; Fry words include duplicates.
+- New learning modules belong in `src/modules/index.js` and should fit the existing learner/profile/progress model.
 - Keep UI copy short, kid-friendly, and calm.
-- Avoid adding new dependencies unless they reduce real complexity.
+- Commit to Skeleton for standard UI: prefer Skeleton utilities/components for buttons, inputs, selects, cards, badges, and progress before adding custom CSS.
+- Preserve accessibility defaults: semantic controls, labels for inputs/icon buttons, visible focus, and no color-only status.
+- Prefer the readability-first font stack in `src/app.css`; Atkinson Hyperlegible and Lexend are preferred when available.
+- Avoid new dependencies unless they remove real complexity.
 
-## Storage Notes
+## Important files
 
-`src/storage/learningStorage.js` exposes the app storage API.
-
-In Tauri, it uses SQLite and creates:
-
-- `learners`
-- `progress`
-- `attempts`
-- `settings`
-
-Outside Tauri, it falls back to `localStorage`.
-
-Progress uses item indexes rather than item text because some learning content may contain repeated labels. The Fry 1,000 list already has repeated words.
-
-## Module Notes
-
-The current active module is `sightWords`.
-
-`mathFacts` and `spelling` are planned placeholders. When implementing them, prefer adding module-specific data and behavior while preserving the shared learner/profile/progress model.
-
-Expected module fields:
-
-```js
-{
-  id,
-  title,
-  label,
-  items,
-  setSize,
-  itemLabel,
-  itemLabelPlural
-}
-```
+- `src/routes/+page.svelte` - app shell and practice UI
+- `src/app.css` - Skeleton/Tailwind imports, style tokens, visual design
+- `src/storage/learningStorage.js` - SQLite/browser storage boundary
+- `src/modules/index.js` - module registry
+- `src/data/fryWords.js` - Fry word data
+- `src-tauri/tauri.conf.json` - Tauri config; frontend build output is `../build`
+- `src-tauri/capabilities/default.json` - desktop permissions, including SQL access
+- `eslint.config.js`, `.prettierrc` - linting and formatting defaults
 
 ## Verification
 
-At minimum, run:
+- Run `npm run format`, `npm run check`, `npm run lint`, and `npm run build` for UI/storage changes.
+- Also run `npm run tauri -- build --debug` after Tauri, Rust, SQLite, or permission changes.
+- Manual smoke check interaction changes: learner add/switch, per-learner progress, set changes, known/learning/starred filters, flash/listen/type modes, and mobile-width layout.
 
-```bash
-npm run build
-```
+## Git hygiene
 
-For desktop, Tauri config, Rust, or SQLite changes, also run:
-
-```bash
-npm run tauri -- build --debug
-```
-
-Manual checks after interaction changes:
-
-- add a learner
-- switch learners
-- confirm progress differs between learners
-- change sight-word sets
-- mark known and learning
-- star and unstar words
-- use flashcard mode
-- use listen-and-find mode
-- use type-it mode
-- try known/starred/learning filters
-- confirm module tabs still render on desktop and mobile widths
-
-## Git Hygiene
-
-Do not commit generated outputs or installed dependencies:
-
-- `node_modules/`
-- `dist/`
-- `src-tauri/target/`
-- `src-tauri/gen/`
+Do not commit generated outputs or installed dependencies: `node_modules/`, `dist/`, `build/`, `.svelte-kit/`, `src-tauri/target/`, `src-tauri/gen/`, `.pi-lens/`.
