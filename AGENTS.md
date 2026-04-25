@@ -4,35 +4,72 @@ Guidance for coding agents working in this repository.
 
 ## Project Shape
 
-This is a local-first React/Vite app packaged with Tauri. The desktop app uses SQLite through the Tauri SQL plugin.
+This is a local-first React/Vite app packaged as a Tauri desktop app. The desktop app uses SQLite through `@tauri-apps/plugin-sql`.
 
-Primary files:
+The app is intended to support:
 
-- `index.html`
-- `src/main.jsx`
-- `src/styles.css`
-- `src/data/fryWords.js`
-- `src/modules/index.js`
-- `src/storage/learningStorage.js`
-- `src-tauri/`
+- multiple learners
+- multiple learning modules
+- per-learner module progress
+- local-first persistence
+
+## Important Files
+
+- `index.html` - Vite entry document
+- `src/main.jsx` - React app shell and practice UI
+- `src/styles.css` - visual design
+- `src/data/fryWords.js` - Fry 1,000 data source
+- `src/modules/index.js` - module registry
+- `src/storage/learningStorage.js` - storage boundary
+- `src-tauri/tauri.conf.json` - Tauri app config
+- `src-tauri/capabilities/default.json` - Tauri permissions, including SQL access
+- `src-tauri/src/lib.rs` - Tauri plugin registration
 
 ## Working Rules
 
-- Keep the app runnable with `npm run dev` for web preview and `npm run tauri -- dev` for desktop development.
-- Do not bypass the storage adapter from UI components.
-- Prefer plain JavaScript, HTML, and CSS that are easy for a parent or teacher to inspect.
-- Preserve browser-local progress behavior unless intentionally changing storage.
-- Keep UI copy kid-friendly, short, and calm.
-- Keep learner progress scoped by learner and module.
-- Keep modules registered in `src/modules/index.js` so new learning areas can share the same navigation and profile system.
+- Keep UI components behind the storage adapter. Do not call SQLite or `localStorage` directly from React components.
+- Keep learner progress scoped by `learnerId`, `moduleId`, and item index.
+- Keep modules registered in `src/modules/index.js`.
+- Keep the app runnable with `npm run dev` for web preview.
+- Keep the desktop app runnable with `npm run tauri -- dev`.
+- Preserve the browser fallback storage unless intentionally replacing the development workflow.
+- Keep UI copy short, kid-friendly, and calm.
+- Avoid adding new dependencies unless they reduce real complexity.
 
-## Data Notes
+## Storage Notes
 
-The Fry sight-word list lives in `src/data/fryWords.js` as readable source rows and is flattened at runtime.
+`src/storage/learningStorage.js` exposes the app storage API.
 
-Progress is tracked by word index rather than word text because the Fry 1,000 source includes repeated words.
+In Tauri, it uses SQLite and creates:
 
-The Tauri app stores learners, progress, attempts, and settings in SQLite. The web preview falls back to `localStorage`.
+- `learners`
+- `progress`
+- `attempts`
+- `settings`
+
+Outside Tauri, it falls back to `localStorage`.
+
+Progress uses item indexes rather than item text because some learning content may contain repeated labels. The Fry 1,000 list already has repeated words.
+
+## Module Notes
+
+The current active module is `sightWords`.
+
+`mathFacts` and `spelling` are planned placeholders. When implementing them, prefer adding module-specific data and behavior while preserving the shared learner/profile/progress model.
+
+Expected module fields:
+
+```js
+{
+  id,
+  title,
+  label,
+  items,
+  setSize,
+  itemLabel,
+  itemLabelPlural
+}
+```
 
 ## Verification
 
@@ -42,21 +79,31 @@ At minimum, run:
 npm run build
 ```
 
-For desktop storage changes, also run:
+For desktop, Tauri config, Rust, or SQLite changes, also run:
 
 ```bash
 npm run tauri -- build --debug
 ```
 
-When changing interactions, manually open `index.html` and test:
+Manual checks after interaction changes:
 
-- changing word sets
-- flashcard next/previous
-- marking known words
-- starring words
-- listen-and-find mode
-- type-it mode
-- known/starred filters
-- adding and switching learners
-- confirming progress differs between learners
-- module tabs remain stable on desktop and mobile
+- add a learner
+- switch learners
+- confirm progress differs between learners
+- change sight-word sets
+- mark known and learning
+- star and unstar words
+- use flashcard mode
+- use listen-and-find mode
+- use type-it mode
+- try known/starred/learning filters
+- confirm module tabs still render on desktop and mobile widths
+
+## Git Hygiene
+
+Do not commit generated outputs or installed dependencies:
+
+- `node_modules/`
+- `dist/`
+- `src-tauri/target/`
+- `src-tauri/gen/`

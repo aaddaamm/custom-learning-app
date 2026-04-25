@@ -1,10 +1,18 @@
 # Custom Learning App
 
-An interactive local-first learning app for multiple kids and learning modules.
+A local-first learning app for multiple kids and multiple learning modules.
 
-The app currently includes the Fry 1,000 sight words and supports multiple learner profiles, so each kid can have their own learning path, starred words, and progress. It is now built with React/Vite and packaged as a Tauri desktop app with SQLite storage.
+The first active module is **Sight Words**, using the Fry 1,000 word list. Each learner has their own known words, starred words, and practice history. The app is built with React and Vite, packaged with Tauri, and stores durable desktop data in SQLite.
 
-## Open the App
+## Current Stack
+
+- React for the UI
+- Vite for local web development and frontend builds
+- Tauri for the desktop app shell
+- SQLite through `@tauri-apps/plugin-sql`
+- Browser `localStorage` fallback when running outside Tauri
+
+## Getting Started
 
 Install dependencies:
 
@@ -12,13 +20,19 @@ Install dependencies:
 npm install
 ```
 
-Run the web development preview:
+Run the web preview:
 
 ```bash
 npm run dev
 ```
 
-Run the desktop app in development:
+Open:
+
+```text
+http://127.0.0.1:1420/
+```
+
+Run the Tauri desktop app in development:
 
 ```bash
 npm run tauri -- dev
@@ -36,47 +50,97 @@ Build the desktop app:
 npm run tauri -- build
 ```
 
-The debug build creates a macOS app and DMG under:
+Build a faster debug desktop bundle:
+
+```bash
+npm run tauri -- build --debug
+```
+
+Debug desktop bundles are created under:
 
 ```text
-/Users/adam/custom-learning-app/src-tauri/target/debug/bundle/
+src-tauri/target/debug/bundle/
 ```
 
 ## Features
 
-- Fry 1,000 sight-word list
 - Multiple learner profiles
-- Per-learner progress and starred words
-- Module tabs for future learning areas
+- Per-learner progress
+- Per-learner starred words
+- Fry 1,000 sight-word module
 - 50-word practice sets
 - Flashcard mode
-- Listen-and-find quiz mode
-- Type-it quiz mode
-- Browser speech synthesis for word pronunciation
-- Known-word tracking
-- Starred-word practice
-- SQLite storage in the Tauri app
-- Browser fallback storage during web preview
+- Listen-and-find mode
+- Type-it mode
+- Browser speech synthesis
+- SQLite storage in the Tauri desktop app
+- Browser fallback storage for quick web preview
+- Planned module slots for Math Facts and Spelling
 
-## Files
+## Project Layout
 
-- `src/main.jsx` - React app shell and sight-word practice UI
-- `src/styles.css` - layout and visual design
-- `src/data/fryWords.js` - Fry 1,000 source data
+- `index.html` - Vite entry document
+- `src/main.jsx` - React app shell and current practice UI
+- `src/styles.css` - application styling
+- `src/data/fryWords.js` - Fry 1,000 source rows and flattened word list
 - `src/modules/index.js` - module registry
-- `src/storage/learningStorage.js` - SQLite storage adapter with browser fallback
-- `src-tauri/` - Tauri desktop shell and SQLite plugin configuration
+- `src/storage/learningStorage.js` - storage adapter for SQLite and browser fallback
+- `src-tauri/` - Tauri desktop app, Rust entry points, permissions, and bundling config
 
-## Development
+## Storage Model
 
-Run a production frontend build with:
+UI code should talk to `src/storage/learningStorage.js`, not directly to SQLite or `localStorage`.
+
+In Tauri, the storage adapter creates these SQLite tables:
+
+- `learners`
+- `progress`
+- `attempts`
+- `settings`
+
+The web preview uses the same adapter API but stores data in `localStorage`. This keeps browser development fast while preserving SQLite as the real desktop storage path.
+
+Progress is stored by learner, module, and item index. The app uses item indexes instead of word text because the Fry list contains repeated words.
+
+## Module Model
+
+Modules are registered in `src/modules/index.js`.
+
+The active module shape is:
+
+```js
+{
+  id: "sightWords",
+  title: "Sight Words",
+  label: "Fry 1,000",
+  items: fryWords,
+  setSize: 50,
+  itemLabel: "word",
+  itemLabelPlural: "words"
+}
+```
+
+Future modules should fit the same navigation model: learner-scoped progress, module-scoped attempts, and small practice sets.
+
+## Verification
+
+Before committing UI or storage changes, run:
 
 ```bash
 npm run build
 ```
 
-## Notes
+For Tauri or SQLite changes, also run:
 
-Progress is stored in SQLite when the app runs under Tauri. When opened as a normal web preview, the storage adapter falls back to `localStorage` so the UI can still be developed quickly.
+```bash
+npm run tauri -- build --debug
+```
 
-The current active module is `Sight Words`. `Math Facts` and `Spelling` are present as planned module slots so the app can grow without changing the overall navigation model.
+## Git
+
+Build outputs and dependency folders are ignored:
+
+- `node_modules/`
+- `dist/`
+- `src-tauri/target/`
+- `src-tauri/gen/`
