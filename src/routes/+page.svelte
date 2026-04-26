@@ -2,6 +2,7 @@
   import { Progress } from "@skeletonlabs/skeleton-svelte";
   import { onMount } from "svelte";
   import ActiveLearnerCard from "$lib/components/ActiveLearnerCard.svelte";
+  import ModuleSelect from "$lib/components/ModuleSelect.svelte";
   import ParentSetup from "$lib/components/ParentSetup.svelte";
   import PracticeCard from "$lib/components/PracticeCard.svelte";
   import PracticeControls from "$lib/components/PracticeControls.svelte";
@@ -24,7 +25,7 @@
   let screen = "splash";
   let learners = [];
   let learnerId = "";
-  let moduleId = "sightWords";
+  let moduleId = modules[0]?.id || "";
   let progress = { known: [], starred: [] };
   let practiced = [];
   let setNumber = 0;
@@ -32,6 +33,7 @@
   let filter = "all";
   let currentOffset = 0;
   let order = [...(modules.find((module) => module.id === moduleId)?.items || []).keys()];
+  let moduleProgressById = {};
   let newLearnerName = "";
   let typedAnswer = "";
   let feedback = "";
@@ -78,9 +80,17 @@
       learnerId = nextLearners.some((learner) => learner.id === savedLearnerId)
         ? savedLearnerId
         : nextLearners[0]?.id || "";
-      moduleId = modules.some((module) => module.id === savedModuleId)
-        ? savedModuleId
-        : "sightWords";
+
+      const learnerModuleId = learnerId
+        ? await nextStorage.getSetting(`activeModuleId:${learnerId}`)
+        : null;
+
+      moduleId = modules.some((module) => module.id === learnerModuleId)
+        ? learnerModuleId
+        : modules.some((module) => module.id === savedModuleId)
+          ? savedModuleId
+          : modules[0]?.id || "";
+
       screen = nextLearners.length ? "splash" : "parent";
 
       await loadProgress();
@@ -125,6 +135,7 @@
     order = [...items.keys()];
     await storage.saveSetting("activeLearnerId", learnerId);
     await storage.saveSetting("activeModuleId", moduleId);
+    await storage.saveSetting(`activeModuleId:${learnerId}`, moduleId);
   }
 
   function speak(text) {
@@ -219,9 +230,36 @@
     screen = "splash";
   }
 
-  function startPracticeForLearner(nextLearnerId) {
+  async function openModuleSelectForLearner(nextLearnerId) {
     learnerId = nextLearnerId;
+    moduleId = modules[0]?.id || "";
+    screen = "modules";
+    await loadModuleProgress(nextLearnerId);
+  }
+
+  async function loadModuleProgress(nextLearnerId) {
+    if (!storage || !nextLearnerId) {
+      moduleProgressById = {};
+      return;
+    }
+
+    const entries = await Promise.all(
+      modules.map(async (module) => [
+        module.id,
+        await storage.getProgress(nextLearnerId, module.id)
+      ])
+    );
+
+    moduleProgressById = Object.fromEntries(entries);
+  }
+
+  function openModule(moduleToOpenId) {
+    moduleId = moduleToOpenId;
     screen = "practice";
+  }
+
+  function openModules() {
+    screen = "modules";
   }
 
   async function addLearner() {
@@ -258,6 +296,8 @@
     <section class="practice card" aria-labelledby="app-title">
       <TopBar knownCount={known.size} headingId="app-title" />
 
+      <button class="btn" type="button" on:click={openModules}>Modules</button>
+
       {#if storageError}
         <p class="storage-alert" role="status">{storageError}</p>
       {/if}
@@ -285,7 +325,8 @@
         {feedback}
         onToggleStarred={toggleStarred}
         onSpeak={() => speak(currentItem)}
-        onListenChoice={(choice) => recordAttempt(currentIndex, choice === currentItem, "listen")}
+        onListenChoice={(choice) =>
+          recordAttempt(currentIndex, choice.index === currentIndex, "listen")}
         onSubmitTyped={submitTypedAnswer}
       />
       <div class="actions">
@@ -329,12 +370,20 @@
         bind:newLearnerName
         onAddLearner={addLearner}
         onBack={openSplash}
-        onStartLearner={startPracticeForLearner}
+        onStartLearner={openModuleSelectForLearner}
+      />
+    {:else if screen === "modules"}
+      <ModuleSelect
+        learnerName={activeLearner?.name || "Learner"}
+        {modules}
+        progressByModuleId={moduleProgressById}
+        onChooseModule={openModule}
+        onBack={openSplash}
       />
     {:else}
       <SplashScreen
         {learners}
-        onSelectLearner={startPracticeForLearner}
+        onSelectLearner={openModuleSelectForLearner}
         onOpenParent={openParentSetup}
       />
     {/if}

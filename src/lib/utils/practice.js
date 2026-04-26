@@ -37,5 +37,11 @@ export function chooseDistractors(index, indexesInSet, moduleItems) {
   const indexes = indexesInSet.filter((nextIndex) => nextIndex !== index);
   const nextChoices = [index, ...indexes.sort(() => Math.random() - 0.5).slice(0, 3)];
 
-  return nextChoices.sort(() => Math.random() - 0.5).map((nextIndex) => moduleItems[nextIndex]);
+  return nextChoices
+    .sort(() => Math.random() - 0.5)
+    .map((nextIndex) => ({
+      id: String(nextIndex),
+      index: nextIndex,
+      text: moduleItems[nextIndex]
+    }));
 }

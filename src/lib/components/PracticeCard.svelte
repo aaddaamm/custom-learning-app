@@ -40,9 +40,9 @@
       <div class="feedback">{knownCurrent ? "Known word" : "Practice this word"}</div>
     {:else if mode === "listen"}
       <div class="choices">
-        {#each choices as choice (choice)}
+        {#each choices as choice (choice.id)}
           <button class="btn choice" type="button" on:click={() => onListenChoice(choice)}
-            >{choice}</button
+            >{choice.text}</button
           >
         {/each}
       </div>

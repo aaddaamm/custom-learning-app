@@ -4,6 +4,7 @@ This app should stay small, local-first, and useful for real practice sessions. 
 
 ## Planning docs
 
+- [Roadmap and flows](docs/roadmap-and-flows.md)
 - [Module implementation plan](docs/module-implementation-plan.md)
 - [Parent oversight and insights plan](docs/parent-oversight-and-insights-plan.md)
 - [Student incentives plan](docs/student-incentives-plan.md) ([issue #5](https://github.com/aaddaamm/custom-learning-app/issues/5))
