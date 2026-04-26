@@ -1,4 +1,6 @@
 const databaseUrl = "sqlite:learning.db";
+const attemptsStorageKey = "learningAttempts";
+const defaultAttemptsLimit = 50;
 
 function readJson(key, fallback) {
   try {
@@ -26,13 +28,50 @@ function normalizeAttempt(attempt) {
   }
 
   return {
-    id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+    id: String(attempt.id || `${Date.now()}-${Math.random().toString(36).slice(2)}`),
     learnerId: String(attempt.learnerId),
     moduleId: String(attempt.moduleId),
     itemIndex: Number(attempt.itemIndex),
     mode: String(attempt.mode || "unknown"),
     correct: Boolean(attempt.correct),
-    createdAt: new Date().toISOString()
+    createdAt: String(attempt.createdAt || new Date().toISOString())
+  };
+}
+
+function clampAttemptsLimit(limit) {
+  if (!Number.isFinite(limit)) return defaultAttemptsLimit;
+  return Math.max(1, Math.min(500, Math.floor(limit)));
+}
+
+function normalizeAttempts(attempts) {
+  if (!Array.isArray(attempts)) return [];
+
+  return attempts
+    .map(normalizeAttempt)
+    .filter(Boolean)
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+}
+
+function summarizeProgress(progress, itemCount = null) {
+  const nextProgress = normalizeProgress(progress);
+  const knownCount = nextProgress.known.length;
+
+  return {
+    knownCount,
+    starredCount: nextProgress.starred.length,
+    learningCount: Number.isFinite(itemCount) ? Math.max(0, Number(itemCount) - knownCount) : null
+  };
+}
+
+function summarizeAttempts(attempts) {
+  const totalAttempts = attempts.length;
+  const correctAttempts = attempts.filter((attempt) => attempt.correct).length;
+
+  return {
+    totalAttempts,
+    correctAttempts,
+    incorrectAttempts: Math.max(0, totalAttempts - correctAttempts),
+    recentAccuracy: totalAttempts ? Math.round((correctAttempts / totalAttempts) * 100) : null
   };
 }
 
@@ -140,6 +179,59 @@ async function createSqliteStorage() {
           attempt.correct ? 1 : 0
         ]
       );
+    },
+    async getAttempts({ learnerId, moduleId, since = null, limit = defaultAttemptsLimit } = {}) {
+      if (!learnerId || !moduleId) return [];
+
+      const params = [learnerId, moduleId];
+      let query = `
+        SELECT id, learner_id, module_id, item_index, mode, correct, created_at
+        FROM attempts
+        WHERE learner_id = $1 AND module_id = $2
+      `;
+
+      if (since) {
+        query += " AND created_at >= $3";
+        params.push(String(since));
+      }
+
+      const limitParam = clampAttemptsLimit(limit);
+      query += ` ORDER BY datetime(created_at) DESC LIMIT $${params.length + 1}`;
+      params.push(limitParam);
+
+      const rows = await db.select(query, params);
+      return rows.map((row) => ({
+        id: String(row.id),
+        learnerId: String(row.learner_id),
+        moduleId: String(row.module_id),
+        itemIndex: Number(row.item_index),
+        mode: String(row.mode),
+        correct: Boolean(row.correct),
+        createdAt: String(row.created_at)
+      }));
+    },
+    async getModuleSummary(learnerId, moduleId, { itemCount = null, since = null, limit } = {}) {
+      if (!learnerId || !moduleId) {
+        return {
+          knownCount: 0,
+          starredCount: 0,
+          learningCount: Number.isFinite(itemCount) ? Number(itemCount) : null,
+          totalAttempts: 0,
+          correctAttempts: 0,
+          incorrectAttempts: 0,
+          recentAccuracy: null
+        };
+      }
+
+      const [progress, attempts] = await Promise.all([
+        this.getProgress(learnerId, moduleId),
+        this.getAttempts({ learnerId, moduleId, since, limit })
+      ]);
+
+      return {
+        ...summarizeProgress(progress, itemCount),
+        ...summarizeAttempts(attempts)
+      };
     }
   };
 }
@@ -202,15 +294,50 @@ function createBrowserStorage() {
       const nextAttempt = normalizeAttempt(attempt);
       if (!nextAttempt) return;
 
-      const attempts = readJson("learningAttempts", memory.attempts);
-      const nextAttempts = Array.isArray(attempts) ? [...attempts, nextAttempt] : [nextAttempt];
+      const attempts = normalizeAttempts(readJson(attemptsStorageKey, memory.attempts));
+      const nextAttempts = [nextAttempt, ...attempts];
       memory.attempts = nextAttempts;
 
       try {
-        localStorage.setItem("learningAttempts", JSON.stringify(nextAttempts));
+        localStorage.setItem(attemptsStorageKey, JSON.stringify(nextAttempts));
       } catch (error) {
         console.error("Browser storage failed to save attempt.", error);
       }
+    },
+    async getAttempts({ learnerId, moduleId, since = null, limit = defaultAttemptsLimit } = {}) {
+      if (!learnerId || !moduleId) return [];
+
+      const attempts = normalizeAttempts(readJson(attemptsStorageKey, memory.attempts));
+      memory.attempts = attempts;
+
+      const filtered = attempts
+        .filter((attempt) => attempt.learnerId === learnerId && attempt.moduleId === moduleId)
+        .filter((attempt) => (since ? new Date(attempt.createdAt) >= new Date(since) : true));
+
+      return filtered.slice(0, clampAttemptsLimit(limit));
+    },
+    async getModuleSummary(learnerId, moduleId, { itemCount = null, since = null, limit } = {}) {
+      if (!learnerId || !moduleId) {
+        return {
+          knownCount: 0,
+          starredCount: 0,
+          learningCount: Number.isFinite(itemCount) ? Number(itemCount) : null,
+          totalAttempts: 0,
+          correctAttempts: 0,
+          incorrectAttempts: 0,
+          recentAccuracy: null
+        };
+      }
+
+      const [progress, attempts] = await Promise.all([
+        this.getProgress(learnerId, moduleId),
+        this.getAttempts({ learnerId, moduleId, since, limit })
+      ]);
+
+      return {
+        ...summarizeProgress(progress, itemCount),
+        ...summarizeAttempts(attempts)
+      };
     }
   };
 }
