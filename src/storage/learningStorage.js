@@ -20,6 +20,22 @@ function normalizeProgress(progress) {
   };
 }
 
+function normalizeAttempt(attempt) {
+  if (!attempt?.learnerId || !attempt?.moduleId || !Number.isInteger(attempt?.itemIndex)) {
+    return null;
+  }
+
+  return {
+    id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+    learnerId: String(attempt.learnerId),
+    moduleId: String(attempt.moduleId),
+    itemIndex: Number(attempt.itemIndex),
+    mode: String(attempt.mode || "unknown"),
+    correct: Boolean(attempt.correct),
+    createdAt: new Date().toISOString()
+  };
+}
+
 export async function createLearningStorage() {
   if (window.__TAURI_INTERNALS__) {
     try {
@@ -132,7 +148,8 @@ function createBrowserStorage() {
   const memory = {
     learners: [],
     progress: new Map(),
-    settings: new Map()
+    settings: new Map(),
+    attempts: []
   };
 
   return {
@@ -181,6 +198,19 @@ function createBrowserStorage() {
         console.error("Browser storage failed to save progress.", error);
       }
     },
-    async saveAttempt() {}
+    async saveAttempt(attempt) {
+      const nextAttempt = normalizeAttempt(attempt);
+      if (!nextAttempt) return;
+
+      const attempts = readJson("learningAttempts", memory.attempts);
+      const nextAttempts = Array.isArray(attempts) ? [...attempts, nextAttempt] : [nextAttempt];
+      memory.attempts = nextAttempts;
+
+      try {
+        localStorage.setItem("learningAttempts", JSON.stringify(nextAttempts));
+      } catch (error) {
+        console.error("Browser storage failed to save attempt.", error);
+      }
+    }
   };
 }
