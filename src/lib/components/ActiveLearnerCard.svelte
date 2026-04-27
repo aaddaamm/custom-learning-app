@@ -1,13 +1,13 @@
 <script>
   export let learnerName = "Learner";
-  export let moduleTitle = "";
+  export let lessonTitle = "Sight Words Lesson";
   export let storageLabel = "";
 </script>
 
 <div class="learner-card">
   <small>Active learner</small>
   <strong>{learnerName}</strong>
-  <span>{moduleTitle} · {storageLabel}</span>
+  <span>{lessonTitle} · {storageLabel}</span>
 </div>
 
 <style>

@@ -38,6 +38,7 @@
   let feedback = "";
 
   $: activeModule = modules.find((module) => module.id === moduleId) || modules[0];
+  $: lessonTitle = activeModule?.title ? `${activeModule.title} Lesson` : "Sight Words Lesson";
   $: ActivePracticeCard = activeModule?.practiceCard;
   $: activeLearner = learners.find((learner) => learner.id === learnerId) || learners[0];
   $: items = activeModule.items || [];
@@ -294,7 +295,7 @@
 {#if screen === "practice"}
   <main class="app">
     <section class="practice card" aria-labelledby="app-title">
-      <TopBar knownCount={known.size} headingId="app-title" />
+      <TopBar knownCount={known.size} headingId="app-title" lessonHeading={lessonTitle} />
 
       <button class="btn" type="button" on:click={openModules}>Modules</button>
 
@@ -342,10 +343,10 @@
       </div>
     </section>
 
-    <aside class="sidebar card" aria-label="Learning path progress">
+    <aside class="sidebar card" aria-label="Sight words lesson progress">
       <ActiveLearnerCard
         learnerName={activeLearner?.name || "Learner"}
-        moduleTitle={activeModule.title}
+        {lessonTitle}
         {storageLabel}
       />
       <SummaryCards

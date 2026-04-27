@@ -1,6 +1,7 @@
 <script>
   export let knownCount = 0;
   export let headingId = "app-title";
+  export let lessonHeading = "Sight Words Lesson";
 </script>
 
 <div class="topbar">
@@ -13,7 +14,7 @@
       height="92"
     />
     <p class="kicker badge">Small steps, big learning</p>
-    <h1 id={headingId}>Learning path</h1>
+    <h1 id={headingId}>{lessonHeading}</h1>
   </div>
 
   <div class="meter" aria-label="Known words count">
