@@ -4,7 +4,6 @@
   import ActiveLearnerCard from "$lib/components/ActiveLearnerCard.svelte";
   import ModuleSelect from "$lib/components/ModuleSelect.svelte";
   import ParentSetup from "$lib/components/ParentSetup.svelte";
-  import PracticeCard from "$lib/components/PracticeCard.svelte";
   import PracticeControls from "$lib/components/PracticeControls.svelte";
   import SplashScreen from "$lib/components/SplashScreen.svelte";
   import SummaryCards from "$lib/components/SummaryCards.svelte";
@@ -39,6 +38,7 @@
   let feedback = "";
 
   $: activeModule = modules.find((module) => module.id === moduleId) || modules[0];
+  $: ActivePracticeCard = activeModule?.practiceCard;
   $: activeLearner = learners.find((learner) => learner.id === learnerId) || learners[0];
   $: items = activeModule.items || [];
   $: known = new Set(progress.known.map(String));
@@ -313,22 +313,25 @@
         onFilterChange={resetCurrentOffset}
       />
 
-      <PracticeCard
-        {currentIndex}
-        itemsLength={items.length}
-        {currentItem}
-        {mode}
-        knownCurrent={known.has(currentKey)}
-        currentStarred={starred.has(currentKey)}
-        {choices}
-        bind:typedAnswer
-        {feedback}
-        onToggleStarred={toggleStarred}
-        onSpeak={() => speak(currentItem)}
-        onListenChoice={(choice) =>
-          recordAttempt(currentIndex, choice.index === currentIndex, "listen")}
-        onSubmitTyped={submitTypedAnswer}
-      />
+      {#if ActivePracticeCard}
+        <svelte:component
+          this={ActivePracticeCard}
+          {currentIndex}
+          itemsLength={items.length}
+          {currentItem}
+          {mode}
+          knownCurrent={known.has(currentKey)}
+          currentStarred={starred.has(currentKey)}
+          {choices}
+          bind:typedAnswer
+          {feedback}
+          onToggleStarred={toggleStarred}
+          onSpeak={() => speak(currentItem)}
+          onListenChoice={(choice) =>
+            recordAttempt(currentIndex, choice.index === currentIndex, "listen")}
+          onSubmitTyped={submitTypedAnswer}
+        />
+      {/if}
       <div class="actions">
         <button class="btn" type="button" on:click={() => move(-1)}>Previous</button>
         <button class="btn" type="button" on:click={shuffleCurrentSet}>Shuffle</button>
