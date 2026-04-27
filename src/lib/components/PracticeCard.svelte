@@ -28,9 +28,9 @@
     >
   </div>
 
-  <button class="btn speak-button" type="button" title="Hear the word" on:click={onSpeak}>
-    <span aria-hidden="true">▶</span>
-    <span>Hear word</span>
+  <button class="speak-button" type="button" title="Hear the word" on:click={onSpeak}>
+    <span class="speak-icon" aria-hidden="true">▶</span>
+    <span class="speak-label">Hear word</span>
   </button>
 
   <div class="word" aria-live="polite">{currentItem || "No words"}</div>
@@ -95,13 +95,78 @@
   }
 
   .speak-button {
+    appearance: none;
     justify-self: center;
     display: inline-flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
+    min-height: 44px;
+    padding: 0 14px;
+    border: 0;
+    border-radius: 14px;
     color: var(--on-accent);
-    background: linear-gradient(135deg, var(--melon), var(--pink-deep));
-    border-color: transparent;
+    background: linear-gradient(135deg, #5d7fff 0%, #3f67ff 62%, #4f5fec 100%);
+    box-shadow: none;
+    transition:
+      transform 120ms ease,
+      background 180ms ease,
+      opacity 120ms ease;
+  }
+
+  .speak-button:hover {
+    background: linear-gradient(135deg, #6b8dff 0%, #4e74ff 62%, #5c6bf0 100%);
+    box-shadow: none;
+    transform: translateY(-1px);
+    filter: none;
+  }
+
+  .speak-button:active {
+    transform: translateY(0) scale(0.98);
+  }
+
+  .speak-button,
+  .speak-button:hover,
+  .speak-button:active {
+    border: 0 !important;
+    box-shadow: none !important;
+  }
+
+  .speak-icon {
+    display: inline-grid;
+    place-items: center;
+    width: 16px;
+    font-size: 0.72rem;
+    line-height: 1;
+    transition: transform 140ms ease;
+  }
+
+  .speak-button:hover .speak-icon {
+    transform: translateX(1px);
+  }
+
+  .speak-button:active .speak-icon {
+    transform: scale(0.96);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .speak-button,
+    .speak-icon {
+      transition: none;
+    }
+
+    .speak-button:hover,
+    .speak-button:active,
+    .speak-button:hover .speak-icon,
+    .speak-button:active .speak-icon {
+      transform: none;
+    }
+  }
+
+  .speak-label {
+    font-size: 0.92rem;
+    font-weight: 950;
+    line-height: 1;
+    white-space: nowrap;
   }
 
   .word {
